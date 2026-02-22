@@ -1,0 +1,218 @@
+{% extends 'main/base.html' %}
+{% load static %}
+
+{% block title %}Photo Gallery{% endblock %}
+
+{% block content %}
+<div class="gallery-container">
+    <div class="gallery-header">
+        <h1>The Parasitoids of Aotearoa</h1>
+        <p class="gallery-description">By Henry Kidd</p>
+    </div>
+
+    <div class="gallery-grid">
+        {% for photo in photos %}
+        <div class="gallery-item">
+            <div class="photo-card">
+                <div class="photo-image-container">
+                    <img src="{{ photo.image.url }}"
+                         alt="{{ photo.title }}"
+                         class="photo-image"
+                         loading="lazy">
+                    <div class="photo-overlay">
+                        <a href="{% url 'gallery_photo' photo.id %}" class="view-btn">View</a>
+                    </div>
+                </div>
+                <div class="photo-info">
+                    <h3 class="photo-title">{{ photo.title }}</h3>
+                    {% if photo.caption %}
+                    <p class="photo-caption">{{ photo.caption|truncatechars:100 }}</p>
+                    {% endif %}
+                    <div class="photo-date">{{ photo.date_taken|date:"F j, Y" }}</div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="empty-gallery">
+            <p>No photos in the gallery yet.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<style>
+    .gallery-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    .gallery-header {
+        text-align: center;
+        margin-bottom: 40px;
+    }
+
+    .gallery-header h1 {
+        color: #2c3e50;
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+    }
+
+    .gallery-description {
+        color: #7f8c8d;
+        font-size: 1.1rem;
+    }
+
+    /* Grid layout for photos */
+    .gallery-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 30px;
+        padding: 20px 0;
+    }
+
+    /* Photo card */
+    .photo-card {
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        transition: transform 0.3s, box-shadow 0.3s;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .photo-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 12px 30px rgba(0,0,0,0.2);
+    }
+
+    /* Image container with fixed aspect ratio for 1600x1200 (4:3) */
+    .photo-image-container {
+        position: relative;
+        width: 100%;
+        padding-bottom: 75%; /* 4:3 aspect ratio (1200/1600 = 0.75) */
+        overflow: hidden;
+        background: #f8f9fa;
+    }
+
+    .photo-image {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.5s;
+    }
+
+    .photo-card:hover .photo-image {
+        transform: scale(1.05);
+    }
+
+    /* Overlay with view button */
+    .photo-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.4);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: opacity 0.3s;
+    }
+
+    .photo-card:hover .photo-overlay {
+        opacity: 1;
+    }
+
+    .view-btn {
+        background: white;
+        color: #2c3e50;
+        padding: 10px 25px;
+        border-radius: 30px;
+        text-decoration: none;
+        font-weight: 600;
+        transform: translateY(20px);
+        transition: transform 0.3s, background-color 0.2s;
+    }
+
+    .photo-card:hover .view-btn {
+        transform: translateY(0);
+    }
+
+    .view-btn:hover {
+        background: #007bff;
+        color: white;
+    }
+
+    /* Photo info section */
+    .photo-info {
+        padding: 20px;
+        flex: 1;
+    }
+
+    .photo-title {
+        margin: 0 0 10px 0;
+        color: #2c3e50;
+        font-size: 1.3rem;
+    }
+
+    .photo-caption {
+        color: #7f8c8d;
+        line-height: 1.5;
+        margin-bottom: 10px;
+        font-size: 0.95rem;
+    }
+
+    .photo-date {
+        color: #95a5a6;
+        font-size: 0.85rem;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .photo-date::before {
+        content: '📅';
+        font-size: 0.9rem;
+    }
+
+    /* Empty state */
+    .empty-gallery {
+        grid-column: 1 / -1;
+        text-align: center;
+        padding: 60px;
+        background: #f8f9fa;
+        border-radius: 12px;
+        color: #7f8c8d;
+        font-size: 1.2rem;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .gallery-grid {
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .gallery-header h1 {
+            font-size: 2rem;
+        }
+
+        .photo-title {
+            font-size: 1.1rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .gallery-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}

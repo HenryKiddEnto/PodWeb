@@ -1,0 +1,3053 @@
+{% extends 'main/base.html' %}
+{% load static %}
+
+{% block title %}Group Sorting Game{% endblock %}
+
+{% block content %}
+<div class="game-container">
+    <div class="game-header">
+    </div>
+
+            <!-- Category Toggles -->
+        <div class="category-toggles">
+            <span class="category-label">Regions:</span>
+
+            <div class="category-grid">
+                <div class="category-item">
+                    <span class="category-name category-1-text">Kanto</span>
+                    <label class="toggle-btn category-1">
+                        <input type="checkbox" id="cat1Toggle" checked onchange="toggleCategory(1)">
+                        <span class="checkmark"></span>
+                    </label>
+                </div>
+                <div class="category-item">
+                    <span class="category-name category-2-text">Johto</span>
+                    <label class="toggle-btn category-2">
+                        <input type="checkbox" id="cat2Toggle" checked onchange="toggleCategory(2)">
+                        <span class="checkmark"></span>
+                    </label>
+                </div>
+                <div class="category-item">
+                    <span class="category-name category-3-text">Hoenn</span>
+                    <label class="toggle-btn category-3">
+                        <input type="checkbox" id="cat3Toggle" checked onchange="toggleCategory(3)">
+                        <span class="checkmark"></span>
+                    </label>
+                </div>
+                <div class="category-item">
+                    <span class="category-name category-4-text">Sinnoh</span>
+                    <label class="toggle-btn category-4">
+                        <input type="checkbox" id="cat4Toggle" checked onchange="toggleCategory(4)">
+                        <span class="checkmark"></span>
+                    </label>
+                </div>
+                <div class="category-item">
+                    <span class="category-name category-5-text">Unova</span>
+                    <label class="toggle-btn category-5">
+                        <input type="checkbox" id="cat5Toggle" checked onchange="toggleCategory(5)">
+                        <span class="checkmark"></span>
+                    </label>
+                </div>
+                <div class="category-item">
+                    <span class="category-name category-6-text">Kalos</span>
+                    <label class="toggle-btn category-6">
+                        <input type="checkbox" id="cat6Toggle" checked onchange="toggleCategory(6)">
+                        <span class="checkmark"></span>
+                    </label>
+                </div>
+                <div class="category-item">
+                    <span class="category-name category-7-text">Alola</span>
+                    <label class="toggle-btn category-7">
+                        <input type="checkbox" id="cat7Toggle" checked onchange="toggleCategory(7)">
+                        <span class="checkmark"></span>
+                    </label>
+                </div>
+                <div class="category-item">
+                    <span class="category-name category-8-text">Alola ★</span>
+                    <label class="toggle-btn category-8">
+                        <input type="checkbox" id="cat8Toggle" checked onchange="toggleCategory(8)">
+                        <span class="checkmark"></span>
+                    </label>
+                </div>
+                <div class="category-item">
+                    <span class="category-name category-9-text">Galar</span>
+                    <label class="toggle-btn category-9">
+                        <input type="checkbox" id="cat9Toggle" checked onchange="toggleCategory(9)">
+                        <span class="checkmark"></span>
+                    </label>
+                </div>
+                <div class="category-item">
+                    <span class="category-name category-10-text">Galar ★</span>
+                    <label class="toggle-btn category-10">
+                        <input type="checkbox" id="cat10Toggle" checked onchange="toggleCategory(10)">
+                        <span class="checkmark"></span>
+                    </label>
+                </div>
+                <div class="category-item">
+                    <span class="category-name category-11-text">Hisui</span>
+                    <label class="toggle-btn category-11">
+                        <input type="checkbox" id="cat11Toggle" checked onchange="toggleCategory(11)">
+                        <span class="checkmark"></span>
+                    </label>
+                </div>
+                <div class="category-item">
+                    <span class="category-name category-12-text">Paldea</span>
+                    <label class="toggle-btn category-12">
+                        <input type="checkbox" id="cat12Toggle" checked onchange="toggleCategory(12)">
+                        <span class="checkmark"></span>
+                    </label>
+                </div>
+                <div class="category-item">
+                    <span class="category-name category-13-text">Paldea ★</span>
+                    <label class="toggle-btn category-13">
+                        <input type="checkbox" id="cat13Toggle" checked onchange="toggleCategory(13)">
+                        <span class="checkmark"></span>
+                    </label>
+                </div>
+                <div class="category-item">
+                    <span class="category-name category-14-text">Lumiose</span>
+                    <label class="toggle-btn category-14">
+                        <input type="checkbox" id="cat14Toggle" checked onchange="toggleCategory(14)">
+                        <span class="checkmark"></span>
+                    </label>
+                </div>
+                <div class="category-item">
+                    <span class="category-name category-15-text">Lumiose ★</span>
+                    <label class="toggle-btn category-15">
+                        <input type="checkbox" id="cat15Toggle" checked onchange="toggleCategory(15)">
+                        <span class="checkmark"></span>
+                    </label>
+                </div>
+            </div>
+        <div class="category-actions">
+            <button class="btn small" onclick="applyCategoryFilter()">Apply Filter</button>
+            <button class="btn small" onclick="toggleAllCategories(true)">✔</button>
+            <button class="btn small" onclick="toggleAllCategories(false)">✘</button>
+            <span class="filtered-count" id="filteredCount"></span>
+        </div>
+    </div>
+
+    <div class="game-layout">
+        <!-- Main Groups Area (Scrollable) -->
+        <div class="groups-main">
+            <div class="groups-grid" id="groupsGrid">
+                <!-- Groups will be dynamically created here -->
+            </div>
+        </div>
+
+        <!-- Right Sidebar - Objects Pool -->
+        <div class="objects-sidebar">
+            <div class="sidebar-header">
+                <h3>Pokémon to Sort</h3>
+                <div class="sort-controls">
+                    <select id="sortSelect" onchange="applySort()">
+                        <option value="none">Shuffle</option>
+                        <option value="number-asc">Number</option>
+                        <option value="name-asc">Name</option>
+                    </select>
+                </div>
+            </div>
+            <div class="objects-container" id="objectsPool">
+                <!-- Objects will be dynamically inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <div class="game-controls">
+        <button class="btn" onclick="checkSolution()">✅ Check</button>
+        <button class="btn" onclick="resetGame()">↩️ Reset</button>
+        <button class="btn" onclick="shuffleObjects()">🎲 Shuffle</button>
+    <button class="btn help-btn" onclick="showHelp()">❓ How to Play</button>
+    </div>
+
+    <div class="message" id="message"></div>
+
+    <!-- Context Menu for Object Properties -->
+    <div id="contextMenu" class="context-menu">
+        <div class="context-menu-content" id="contextMenuContent"></div>
+    </div>
+</div>
+
+<div id="simpleLoader" class="simple-loader">
+    <div class="simple-spinner"></div>
+    <span>Loading game data...</span>
+</div>
+
+<div id="helpModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>How to Play</h2>
+            <span class="close-btn" onclick="closeHelp()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <div class="help-section">
+                <h3>Game Objective</h3>
+                <p>Sort all Pokémon into teams of three! </p>
+                <p>Pokémon that share a weakness <b>cannot</b> be on the same team.</p>
+            </div>
+
+            <div class="help-section">
+                <h3>Basic Controls</h3>
+                <ul>
+                    <li><strong>Drag & Drop:</strong> Move Pokémon between teams</li>
+                    <li><strong>Right-Click:</strong> View type weaknesses and alternate formes</li>
+                </ul>
+            </div>
+            <div class="help-section">
+                <h3>Teams</h3>
+                <ul>
+                    <li>Teams turn <span class="green-text">green</span> when complete</li>
+                    <li>The <span class="orange-text">remainder box</span> holds 1-2 Pokémon when the total isn't divisible by 3</li>
+                    <li>Click <strong>Check</strong> to verify your solution</li>
+                    <li>Click <strong>Reset</strong> to start over</li>
+                </ul>
+            </div>
+
+            <div class="help-section">
+                <h3>Regions</h3>
+                <ul>
+                    <li>Each region includes the full regional dex.</li>
+                    <li>Regions marked by ★ contain DLC Pokémon (e.g. Isle of Armor, ZA Hyperspace) </li>
+                </ul>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn" onclick="closeHelp()">Got it!</button>
+        </div>
+    </div>
+</div>
+
+<div id="solutionPopup" class="solution-popup">
+    <div class="popup-content">
+        <div class="popup-header" id="popupHeader">
+            <h3 id="popupTitle">Solution Check</h3>
+            <span class="popup-close" onclick="closeSolutionPopup()">&times;</span>
+        </div>
+        <div class="popup-body">
+            <div class="popup-details" id="popupDetails"></div>
+        </div>
+        <div class="popup-footer">
+            <button class="popup-btn" onclick="closeSolutionPopup()">OK</button>
+        </div>
+    </div>
+</div>
+
+<style>
+    .game-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        font-size: 14px; /* Base smaller font */
+    }
+
+    .game-header h1 {
+        font-size: 1.8rem;
+        margin-bottom: 5px;
+        color: #2c3e50;
+        text-align: center;
+    }
+
+    .game-instructions {
+        font-size: 0.9rem;
+        color: #7f8c8d;
+        margin-bottom: 15px;
+        text-align: center;
+    }
+
+    .switching-icon {
+        position: absolute;
+        top: 2px;
+        right: 2px;
+        font-size: 0.7rem;
+        background: rgba(255,255,255,0.95);
+        color: #2c3e50;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        cursor: help;
+        z-index: 2;
+        transition: all 0.2s ease;
+        border: 1px solid white;
+    }
+
+    .switching-icon:hover {
+        transform: scale(1.1);
+        background: white;
+        box-shadow: 0 3px 6px rgba(0,0,0,0.3);
+    }
+
+    /* Main Layout - Groups on left, Objects on right */
+    .game-layout {
+        display: flex;
+        gap: 15px;
+        height: calc(58vh);
+        min-height: 500px;
+    }
+
+    /* Valid drop target */
+    .group-objects.drag-valid {
+        background: rgba(40, 167, 69, 0.1);
+        border: 2px dashed #28a745;
+    }
+
+    /* Invalid drop target */
+    .group-objects.drag-invalid {
+        background: rgba(220, 53, 69, 0.1);
+        border: 2px dashed #dc3545;
+        cursor: not-allowed;
+    }
+
+    /* Drag over effect - base */
+    .group-objects.drag-over {
+        border-radius: 4px;
+    }
+
+    /* Groups Area - Scrollable */
+    .groups-main {
+        flex: 3;
+        overflow-y: auto;
+        padding-right: 10px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 15px;
+    }
+
+    .groups-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); /* Increased from 100px to 150px */
+        gap: 8px; /* Slightly larger gap */
+    }
+
+    /* Compact Group Box */
+    .group {
+        background: white;
+        border-radius: 6px;
+        border: 1px solid #dee2e6;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        transition: all 0.2s ease;
+    }
+
+    /* Group completion states */
+    .group.complete {
+        background: #d4edda;  /* Light green background */
+        border-color: #28a745;  /* Green border */
+        box-shadow: 0 0 0 2px rgba(40, 167, 69, 0.2);
+        transition: all 0.2s ease;
+    }
+
+    .group.complete .group-objects:empty::after {
+        color: #28a745;
+        border-color: #28a745;
+    }
+
+    .group-name {
+        font-weight: bold;
+        color: #2c3e50;
+    }
+
+    .group-count {
+        background: #595959;
+        color: white;
+        padding: 1px 4px;
+        border-radius: 8px;
+        font-size: 0.6rem;
+    }
+
+    .group-objects {
+        min-height: 60px;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr); /* 3 columns in groups */
+        gap: 2px;
+    }
+
+    .action-btn {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        padding: 6px 10px;
+        font-size: 0.75rem;
+        cursor: pointer;
+        transition: all 0.1s;
+        text-align: left;
+        width: 100%;
+        margin-bottom: 4px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .action-btn:hover {
+        background: #e9ecef;
+        border-color: #adb5bd;
+    }
+
+    .action-btn:active {
+        background: #dee2e6;
+    }
+
+    .switch-base-btn {
+        background: #e3f2fd;
+        border-color: #90caf9;
+        color: #0d47a1;
+    }
+
+    .switch-base-btn:hover {
+        background: #bbdefb;
+    }
+
+    .alt-switch-btn {
+        background: #f3e5f5;
+        border-color: #ce93d8;
+        color: #4a148c;
+    }
+
+    .alt-switch-btn:hover {
+        background: #e1bee7;
+    }
+
+    .object-card.alternative-active {
+        position: relative;
+    }
+
+    .object-card.alternative-active::before {
+        content: '⚡';
+        position: absolute;
+        top: -2px;
+        left: -2px;
+        font-size: 0.5rem;
+        background: #ffd700;
+        color: #000;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid white;
+        z-index: 3;
+    }
+
+    /* Right Sidebar - Objects Pool */
+    .objects-sidebar {
+        flex: 1;
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 15px;
+        display: flex;
+        flex-direction: column;
+        min-width: 200px;
+    }
+
+    .objects-sidebar h3 {
+        font-size: 1rem;
+        margin-top: 0;
+        margin-bottom: 10px;
+        color: #2c3e50;
+    }
+
+    .objects-container {
+        overflow-y: auto;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr); /* 5 columns */
+        gap: 4px;
+        padding: 4px;
+    }
+
+    /* Compact Object Card - No Text */
+    .object-card {
+        border-radius: 4px;
+        cursor: move;
+        user-select: none;
+        transition: transform 0.1s, box-shadow 0.1s;
+        aspect-ratio: 1 / 1; /* Square cards */
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 2px;
+        position: relative;
+    }
+
+    .object-card:hover {
+        transform: translateY(-3px) scale(1.02);
+        box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+        z-index: 10; /* Bring hovered card to front */
+        filter: brightness(1.1);
+    }
+
+    /* Sidebar header with sort controls */
+    .sidebar-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .sidebar-header h3 {
+        margin: 0;
+        font-size: 1rem;
+    }
+
+    /* Simple lightweight loader */
+    .simple-loader {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 8px 16px;
+        border-radius: 30px;
+        font-size: 0.85rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        z-index: 10000;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        backdrop-filter: blur(5px);
+        transition: opacity 0.3s ease;
+    }
+
+    .simple-loader.hidden {
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    .simple-spinner {
+        width: 16px;
+        height: 16px;
+        border: 2px solid rgba(255,255,255,0.3);
+        border-radius: 50%;
+        border-top-color: white;
+        animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+    .sort-controls select {
+        padding: 4px 8px;
+        border-radius: 4px;
+        border: 1px solid #dee2e6;
+        font-size: 0.75rem;
+        background: white;
+        cursor: pointer;
+    }
+
+    .sort-controls select:hover {
+        border-color: #adb5bd;
+    }
+
+    .sort-controls select:focus {
+        outline: none;
+        border-color: #595959;
+    }
+
+    /* Alternative indicator */
+    .alt-indicator {
+        position: absolute;
+        top: 2px;
+        right: 2px;
+        font-size: 0.6rem;
+        background: rgba(255,255,255,0.9);
+        color: #2c3e50;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        cursor: help;
+        z-index: 2;
+    }
+
+    .object-card[data-has-alternatives="true"] {
+        cursor: pointer;
+    }
+
+    .object-card[data-has-alternatives="true"]:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    }
+
+    /* Object Image */
+    .object-image {
+        width: 40px;
+        height: 40px;
+        object-fit: contain;
+        image-rendering: auto;
+        margin-bottom: 2px;
+    }
+
+    /* Property Indicator Dots */
+    .property-dots {
+        display: flex;
+        gap: 2px;
+        justify-content: center;
+        flex-wrap: wrap;
+        max-width: 100%;
+        padding: 0 2px;
+    }
+
+    .property-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        display: inline-block;
+        border: 1px solid rgba(255,255,255,0.5);
+        cursor: help;
+        flex-shrink: 0;
+    }
+
+    .more-props {
+        font-size: 0.5rem;
+        background: rgba(255,255,255,0.3);
+        padding: 1px 3px;
+        border-radius: 6px;
+        margin-left: 1px;
+        line-height: 1;
+    }
+
+    /* Simple tooltip */
+    .object-card {
+        position: relative;
+    }
+
+    .context-section {
+        margin-bottom: 16px;
+    }
+
+    .context-section-title {
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 8px;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        text-align: center;
+    }
+
+    /* Property chips */
+    .property-chip-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
+    .property-chip {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 16px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: white;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        transition: transform 0.1s;
+        margin:auto;
+    }
+
+    .property-chip:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+
+    .no-properties {
+        font-style: italic;
+        color: #adb5bd;
+        font-size: 0.75rem;
+    }
+
+
+    .object-card:hover::after {
+        content: attr(data-object-name);
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0,0,0,0.8);
+        color: white;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 0.6rem;
+        white-space: nowrap;
+        z-index: 100;
+        pointer-events: none;
+        margin-bottom: 4px;
+    }
+
+    /* Context Menu */
+    .context-menu {
+        display: none;
+        position: fixed;
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        z-index: 1000;
+        min-width: 150px;
+    }
+
+    .context-menu-header {
+        background: #f8f9fa;
+        padding: 8px 12px;
+        border-bottom: 1px solid #ddd;
+        font-weight: bold;
+        font-size: 0.8rem;
+        border-radius: 6px 6px 0 0;
+    }
+
+    .context-menu-content {
+        padding: 8px 12px;
+        font-size: 0.8rem;
+    }
+
+    .context-menu-content ul {
+        margin: 5px 0;
+        padding-left: 20px;
+    }
+
+    /* Solution Popup Styles */
+    .solution-popup {
+        display: none;
+        position: fixed;
+        z-index: 20000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.5);
+        backdrop-filter: blur(3px);
+        animation: fadeIn 0.2s ease;
+    }
+
+    .solution-popup.show {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .popup-content {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        width: 90%;
+        max-width: 450px;
+        animation: slideUp 0.3s ease;
+        overflow: hidden;
+    }
+
+    @keyframes slideUp {
+        from {
+            transform: translateY(30px);
+            opacity: 0;
+        }
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+
+    .popup-header {
+        padding: 16px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #e9ecef;
+    }
+
+    .popup-header.success { background: #d4edda; color: #155724; }
+    .popup-header.error { background: #f8d7da; color: #721c24; }
+    .popup-header.warning { background: #fff3cd; color: #856404; }
+
+    .popup-header h3 {
+        margin: 0;
+        font-size: 1.2rem;
+        font-weight: 600;
+    }
+
+    .popup-close {
+        font-size: 1.8rem;
+        font-weight: bold;
+        cursor: pointer;
+        line-height: 1;
+        opacity: 0.7;
+        transition: opacity 0.2s;
+    }
+
+    .popup-close:hover {
+        opacity: 1;
+    }
+
+    .popup-body {
+        padding: 24px 20px;
+        text-align: center;
+    }
+
+    @keyframes bounce {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.2); }
+    }
+
+    .popup-details {
+        font-size: 1.2rem;
+        font-weight: 500;
+        color: #2c3e50;
+        margin-bottom: 15px;
+    }
+
+    .popup-footer {
+        padding: 15px 20px;
+        border-top: 1px solid #e9ecef;
+        text-align: right;
+    }
+
+    .popup-btn {
+        background: #595959;
+        color: white;
+        border: none;
+        padding: 8px 24px;
+        border-radius: 20px;
+        font-size: 0.95rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+
+    .popup-btn:hover {
+        background: #CB7E29;
+    }
+
+    .popup-btn.close-btn {
+        background: #6c757d;
+    }
+
+    .popup-btn.close-btn:hover {
+        background: #5a6268;
+    }
+
+    /* Alternative switch buttons */
+    .alt-switch-btn {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        padding: 4px 8px;
+        font-size: 0.7rem;
+        cursor: pointer;
+        transition: all 0.1s;
+        text-align: left;
+    }
+
+    .alt-switch-btn:hover {
+        background: #e9ecef;
+        border-color: #adb5bd;
+    }
+
+    .alt-switch-btn:active {
+        background: #dee2e6;
+    }
+
+    /* Game Controls */
+    .game-controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+        margin: 15px 0 10px;
+        justify-content: center;
+    }
+
+    .game-controls .btn {
+        padding: 6px 10px;
+        font-size: 0.8rem;
+        background: #595959;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        white-space: nowrap;
+    }
+
+    .game-controls .btn:hover {
+        background: #CB7E29;
+    }
+
+    .game-controls .btn.small {
+        padding: 4px 8px;
+        font-size: 0.7rem;
+    }
+
+    /* Modal styles */
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 10000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.5);
+        animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    .modal-content {
+        position: relative;
+        background-color: white;
+        margin: 5% auto;
+        padding: 0;
+        width: 90%;
+        max-width: 700px;
+        max-height: 80vh;
+        border-radius: 12px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        animation: slideDown 0.3s ease;
+        display: flex;
+        flex-direction: column;
+    }
+
+    @keyframes slideDown {
+        from {
+            transform: translateY(-50px);
+            opacity: 0;
+        }
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+
+    .modal-header {
+        padding: 15px 20px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 12px 12px 0 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-shrink: 0;
+    }
+
+    .modal-header h2 {
+        margin: 0;
+        font-size: 1.5rem;
+    }
+
+    .close-btn {
+        font-size: 2rem;
+        font-weight: bold;
+        cursor: pointer;
+        line-height: 1;
+        transition: transform 0.2s;
+    }
+
+    .close-btn:hover {
+        transform: scale(1.2);
+    }
+
+    .modal-body {
+        padding: 20px;
+        overflow-y: auto;
+        max-height: calc(80vh - 130px);
+    }
+
+    .modal-footer {
+        padding: 15px 20px;
+        border-top: 1px solid #dee2e6;
+        text-align: right;
+        flex-shrink: 0;
+    }
+
+    /* Help section styling */
+    .help-section {
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid #e9ecef;
+    }
+
+    .help-section:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+        padding-bottom: 0;
+    }
+
+    .help-section h3 {
+        color: #2c3e50;
+        margin: 0 0 10px 0;
+        font-size: 1.1rem;
+    }
+
+    .help-section ul {
+        margin: 5px 0 0 20px;
+        padding: 0;
+    }
+
+    .help-section li {
+        margin-bottom: 6px;
+        line-height: 1.4;
+    }
+
+    .color-dot {
+        display: inline-block;
+        width: 16px;
+        height: 16px;
+        border-radius: 4px;
+        margin-right: 6px;
+        vertical-align: middle;
+    }
+
+    .gradient-example {
+        display: inline-block;
+        width: 16px;
+        height: 16px;
+        border-radius: 4px;
+        margin-right: 6px;
+        vertical-align: middle;
+        background: linear-gradient(135deg, #ef5350 0%, #42a5f5 50%, #66bb6a 100%);
+    }
+
+    .icon-example {
+        display: inline-block;
+        width: 20px;
+        text-align: center;
+        margin-right: 4px;
+        font-size: 1rem;
+    }
+
+    .badge-example {
+        display: inline-block;
+        background: rgba(0,0,0,0.3);
+        color: white;
+        font-size: 0.7rem;
+        padding: 2px 4px;
+        border-radius: 8px;
+        margin-right: 6px;
+    }
+
+    .green-text {
+        color: #28a745;
+        font-weight: bold;
+    }
+
+    .orange-text {
+        color: #ff9800;
+        font-weight: bold;
+    }
+
+    /* Help button styling */
+    .help-btn {
+        background: #595959 !important;
+    }
+
+    .help-btn:hover {
+        background: #0056b3 !important;
+    }
+
+    /* Responsive modal */
+    @media (max-width: 768px) {
+        .modal-content {
+            width: 95%;
+            margin: 10% auto;
+        }
+
+        .modal-header h2 {
+            font-size: 1.2rem;
+        }
+
+        .help-section h3 {
+            font-size: 1rem;
+        }
+
+        .help-section li {
+            font-size: 0.9rem;
+        }
+    }
+
+    /* Message Area */
+    .message {
+        padding: 8px;
+        border-radius: 4px;
+        font-size: 0.9rem;
+        text-align: center;
+        min-height: 40px;
+        display:none;
+    }
+
+
+    .message.success { background: #d4edda; color: #155724; }
+    .message.error { background: #f8d7da; color: #721c24; }
+    .message.warning { background: #fff3cd; color: #856404; }
+
+    /* Scrollbar Styling */
+    .groups-main::-webkit-scrollbar,
+    .objects-container::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .groups-main::-webkit-scrollbar-track,
+    .objects-container::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 3px;
+    }
+
+    .groups-main::-webkit-scrollbar-thumb,
+    .objects-container::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 3px;
+    }
+
+/* ====================================
+   REMAINDER BOX STYLES
+   ==================================== */
+
+    .remainder-section {
+        margin-top: 20px;
+        padding-top: 15px;
+        border-top: 2px dashed #dee2e6;
+    }
+
+    .remainder-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 10px;
+    }
+
+    .remainder-header h3 {
+        font-size: 0.9rem;
+        color: #2c3e50;
+        margin: 0;
+    }
+
+    .remainder-badge {
+        background: #ff9800;
+        color: white;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 0.7rem;
+        font-weight: bold;
+    }
+
+    .remainder-box {
+        background: #fff3e0;
+        border: 2px dashed #ff9800;
+        border-radius: 8px;
+        padding: 10px;
+        min-height: 80px;
+        max-width: 160px; /* Limit width */
+    }
+
+    .remainder-box .group-objects {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr); /* Can hold up to 2 objects */
+        gap: 6px;
+        max-height: 40px;
+    }
+
+    /* Completion state for remainder box */
+    .remainder-box.complete {
+        background: #d4edda;
+        border-color: #28a745;
+    }
+
+    .remainder-box.complete .group-objects:empty::after {
+        color: #28a745;
+        border-color: #28a745;
+    }
+
+    .remainder-box .group-count {
+        background: #ff9800;
+    }
+
+    .remainder-box.complete .group-count {
+        background: #28a745;
+    }
+
+    /* ADD to Existing */
+    .object-card .category-values {
+        font-size: 0.6rem;
+        background: rgba(255,255,255,0.2);
+        padding: 1px 4px;
+        border-radius: 3px;
+        margin-top: 1px;
+        display: flex;
+        gap: 4px;
+    }
+
+    .category-value {
+        display: inline-block;
+    }
+
+    .category-value.cat1 { color: #ff8a80; }
+    .category-value.cat2 { color: #82b1ff; }
+    .category-value.cat3 { color: #b9f6ca; }
+    .category-value.cat4 { color: #82b1ff; }
+    .category-value.cat5 { color: #F2F2F2; }
+    .category-value.cat6 { color: #b9f6ca; }
+    .category-value.cat7 { color: #ff8a80; }
+    .category-value.cat8 { color: #82b1ff; }
+    .category-value.cat9 { color: #b9f6ca; }
+    .category-value.cat10 { color: #ff8a80; }
+    .category-value.cat11 { color: #82b1ff; }
+    .category-value.cat12 { color: #b9f6ca; }
+    .category-value.cat13 { color: #ff8a80; }
+    .category-value.cat14 { color: #82b1ff; }
+    .category-value.cat15 { color: #b9f6ca; }
+
+    .object-name,
+    .category-values,
+    .category-badge {
+        display: none;
+    }
+
+    /* Category Toggles - New Grid Layout */
+    .category-toggles {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 15px;
+    }
+
+    .category-label {
+        display: block;
+        font-weight: bold;
+        color: #2c3e50;
+        margin-bottom: 12px;
+        font-size: 0.9rem;
+    }
+
+    .category-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+        gap: 10px;
+        margin-bottom: 4px;
+    }
+
+    .category-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        padding: 2px 2px;
+        border-radius: 2px;
+        background: white;
+        border: 1px solid #e9ecef;
+        transition: all 0.2s ease;
+    }
+
+    .category-item:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .category-name {
+        font-size: 0.65rem;
+        font-weight: 600;
+        margin-bottom: 2px;
+        padding: 0px 0px;
+        border-radius: 1px;
+    }
+
+
+    /* Toggle button styles - now just a square checkbox */
+    .toggle-btn {
+        position: relative;
+        display: inline-block;
+        width: 32px;
+        height: 34px;
+        cursor: pointer;
+        border-radius: 6px;
+        transition: all 0.2s ease;
+    }
+
+    /* Hide default checkbox */
+    .toggle-btn input {
+        position: absolute;
+        opacity: 0;
+        cursor: pointer;
+        height: 0;
+        width: 0;
+    }
+
+    /* Custom checkbox - square */
+    .checkmark {
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 32px;
+        width: 32px;
+        background-color: #e9ecef;
+        border-radius: 16px;
+        transition: all 0.2s ease;
+        border: 2px solid transparent;
+    }
+
+
+    /* Category background colors for unchecked state */
+    .category-1 .checkmark { background-color: #FFD1D1; }
+    .category-2 .checkmark { background-color: #D9ECF3; }
+    .category-3 .checkmark { background-color: #BEF0C6; }
+    .category-4 .checkmark { background-color: #D5CADC; }
+    .category-5 .checkmark { background-color: #D9D9D9; }
+    .category-6 .checkmark { background-color: #F8D1FB; }
+    .category-7 .checkmark { background-color: #FBF8BD; }
+    .category-8 .checkmark { background-color: #FBF8BD; }
+    .category-9 .checkmark { background-color: #f8bbd0; }
+    .category-10 .checkmark { background-color: #f8bbd0; }
+    .category-11 .checkmark { background-color: #D5CADC; }
+    .category-12 .checkmark { background-color: #FFD1A3; }
+    .category-13 .checkmark { background-color: #FFD1A3; }
+    .category-14 .checkmark { background-color: #F8D1FB; }
+    .category-15 .checkmark { background-color: #F8D1FB; }
+
+    /* Hover state */
+    .toggle-btn:hover .checkmark {
+        transform: scale(1.1);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+
+    /* Checked state - full color */
+    .toggle-btn input:checked ~ .checkmark {
+        background-color: currentColor;
+        border-color: white;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+
+    /* Checkmark indicator (white dot or check) */
+    .toggle-btn input:checked ~ .checkmark::after {
+        content: "✓";
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        color: white;
+        font-size: 1.2rem;
+        font-weight: bold;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+    }
+
+    /* Category background colors for checked state */
+    .category-1 input:checked ~ .checkmark { background-color: #F14545; }
+    .category-2 input:checked ~ .checkmark { background-color: #8AC5DA; }
+    .category-3 input:checked ~ .checkmark { background-color: #6ADC7D; }
+    .category-4 input:checked ~ .checkmark { background-color: #AD97BB; }
+    .category-5 input:checked ~ .checkmark { background-color: #696969; }
+    .category-6 input:checked ~ .checkmark { background-color: #ED8CF4; }
+    .category-7 input:checked ~ .checkmark { background-color: #F5ED51; }
+    .category-8 input:checked ~ .checkmark { background-color: #F5ED51; }
+    .category-9 input:checked ~ .checkmark { background-color: #ec407a; }
+    .category-10 input:checked ~ .checkmark { background-color: #ec407a; }
+    .category-11 input:checked ~ .checkmark { background-color: #AD97BB; }
+    .category-12 input:checked ~ .checkmark { background-color: #FF9F3F; }
+    .category-13 input:checked ~ .checkmark { background-color: #FF9F3F; }
+    .category-14 input:checked ~ .checkmark { background-color: #ED8CF4; }
+    .category-15 input:checked ~ .checkmark { background-color: #ED8CF4; }
+
+    /* Category actions row */
+    .category-actions {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 1px solid #dee2e6;
+        flex-wrap: wrap;
+    }
+
+    .category-actions .btn {
+        height: 30px;
+        padding: 6px 16px;
+        font-size: 0.85rem;
+        background: #595959;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+
+    .category-actions .btn:hover {
+        background: #CB7E29;
+    }
+
+    .filtered-count {
+        font-size: 0.85rem;
+        color: #6c757d;
+        margin-left: auto;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .objects-container {
+            grid-template-columns: repeat(3, 1fr); /* 3 columns on mobile */
+        }
+
+        .object-image {
+            width: 28px;
+            height: 28px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .objects-container {
+            grid-template-columns: repeat(2, 1fr); /* 2 columns on very small screens */
+        }
+    }
+</style>
+
+<script>
+
+    // At the top of your script, initialize loader
+    document.addEventListener('DOMContentLoaded', function() {
+        // Show loader
+        const loader = document.getElementById('simpleLoader');
+        if (loader) loader.classList.remove('hidden');
+    });
+
+    // Game state
+    let allObjects = []; // Will be loaded from JSON
+    let objects = [];
+    let groups = [];
+    let draggedItem = null;
+    let activeCategories =  [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
+    let currentSort = 'Number';
+
+    // Property colors for dots
+    const propertyColors = {
+        'Normal': '#9099a1',
+        'Fire': '#ff9c54',
+        'Water': '#4d90d5',
+        'Electric': '#f3d23b',
+        'Grass': '#63bb5b',
+        'Ice': '#74cec0',
+        'Fighting': '#d3416b',
+        'Poison': '#ab6ac8',
+        'Ground': '#d97746',
+        'Flying': '#8fa8dd',
+        'Psychic': '#f97176',
+        'Bug': '#90c12c',
+        'Rock': '#cbbb8e',
+        'Ghost': '#556cad',
+        'Dragon': '#0a71cc',
+        'Dark': '#5a5366',
+        'Steel': '#5a8ea1',
+        'Fairy': '#ec8fe6',
+    };
+
+    // Wait for DOM to be fully loaded before running any code
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('DOM loaded, initializing game...');
+        loadObjects();
+    });
+
+    // Load objects from JSON
+    async function loadObjects() {
+        try {
+            const url = "{% static 'json/pokedata.json' %}";
+            console.log('Fetching from:', url);
+
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            console.log('Raw data received:', data);
+
+            // Transform the data from your format
+            allObjects = [];
+            let objectCount = 0;
+
+            // First pass: create all objects and build a map for lookups
+            const objectMap = new Map();
+
+            for (const [key, obj] of Object.entries(data)) {
+                objectCount++;
+                console.log(`\n--- Processing object ${objectCount}: ${key} ---`);
+                console.log('Raw object:', obj);
+
+                // Parse category values as numbers (they might be strings in JSON)
+                const cat1 = parseInt(obj.KantoDex) || 0;
+                const cat2 = parseInt(obj.JohtoDex) || 0;
+                const cat3 = parseInt(obj.HoennDex) || 0;
+                const cat4 = parseInt(obj.SinnohDex) || 0;
+                const cat5 = parseInt(obj.UnovaDex) || 0;
+                const cat6 = parseInt(obj.KalosDex) || 0;
+                const cat7 = parseInt(obj.AlolaDex) || 0;
+                const cat8 = parseInt(obj.AlolaDLC) || 0;
+                const cat9 = parseInt(obj.GalarDex) || 0;
+                const cat10 = parseInt(obj.GalarDLC) || 0;
+                const cat11 = parseInt(obj.HisuiDex) || 0;
+                const cat12 = parseInt(obj.PaldeaDex) || 0;
+                const cat13 = parseInt(obj.PaldeaDLC) || 0;
+                const cat14 = parseInt(obj.LumioseDex) || 0;
+                const cat15 = parseInt(obj.LumioseDLC) || 0;
+
+                // Parse exclude and override
+                const exclude = parseInt(obj.evonum) || 0;
+                const override = obj.latergenevo || null;
+                const number = parseInt(obj.num) || 0;
+
+                // Determine which categories this object belongs to (value > 0)
+                const categories = [];
+                if (cat1 > 0) categories.push(1);
+                if (cat2 > 0) categories.push(2);
+                if (cat3 > 0) categories.push(3);
+                if (cat4 > 0) categories.push(4);
+                if (cat5 > 0) categories.push(5);
+                if (cat6 > 0) categories.push(6);
+                if (cat7 > 0) categories.push(7);
+                if (cat8 > 0) categories.push(8);
+                if (cat9 > 0) categories.push(9);
+                if (cat10 > 0) categories.push(10);
+                if (cat11 > 0) categories.push(11);
+                if (cat12 > 0) categories.push(12);
+                if (cat13 > 0) categories.push(13);
+                if (cat14 > 0) categories.push(14);
+                if (cat15 > 0) categories.push(15);
+
+                // Combine all properties from x2Eff, x4Eff, properties3
+                const properties = [];
+
+                if (obj.x2Eff && Array.isArray(obj.x2Eff)) {
+                    properties.push(...obj.x2Eff);
+                }
+
+                if (obj.x4Eff && Array.isArray(obj.x4Eff)) {
+                    properties.push(...obj.x4Eff);
+                }
+
+                const newObj = {
+                    id: `obj-${obj.id || key}`,
+                    name: obj.name || key,
+                    key: key,
+                    filename: obj.filename || 'default',
+                    categories: categories,
+                    primaryCategory: categories[0] || 1,
+                    KantoDex: cat1,
+                    JohtoDex: cat2,
+                    HoennDex: cat3,
+                    SinnohDex: cat4,
+                    UnovaDex: cat5,
+                    KalosDex: cat6,
+                    AlolaDex: cat7,
+                    AlolaDLC: cat8,
+                    GalarDex: cat9,
+                    GalarDLC: cat10,
+                    HisuiDex: cat11,
+                    PaldeaDex: cat12,
+                    PaldeaDLC: cat13,
+                    LumioseDex: cat14,
+                    LumioseDLC: cat15,
+                    properties: properties,
+                    x2Eff: obj.x2Eff || [],
+                    x4Eff: obj.x4Eff || [],
+                    isBase: parseInt(obj.isbase) === 1, // Convert to boolean
+                    baseSpecies: obj.baseSpecies || null,
+                    exclude: exclude > 0, // Convert to boolean
+                    excludeValue: exclude,
+                    override: override,
+                    number: number,
+                    alternatives: [], // Will store references to alternative versions
+                    group: null
+                };
+
+                allObjects.push(newObj);
+                objectMap.set(key, newObj);
+                objectMap.set(obj.name, newObj); // Also map by name for baseSpecies lookup
+            }
+
+            // Second pass: link alternatives to their base objects
+            allObjects.forEach(obj => {
+                if (!obj.isBase && obj.baseSpecies) {
+                    // Find the base object by name
+                    const baseObj = allObjects.find(o => o.name === obj.baseSpecies);
+                    if (baseObj) {
+                        if (!baseObj.alternatives) {
+                            baseObj.alternatives = [];
+                        }
+                        baseObj.alternatives.push(obj);
+                        console.log(`Linked alternative ${obj.name} to base ${baseObj.name}`);
+                    } else {
+                        console.warn(`Base object not found for ${obj.name}: ${obj.baseSpecies}`);
+                    }
+                }
+            });
+
+            // Build override lookup map
+            const overrideMap = new Map();
+            allObjects.forEach(obj => {
+                if (obj.override) {
+                    if (!overrideMap.has(obj.override)) {
+                        overrideMap.set(obj.override, []);
+                    }
+                    overrideMap.get(obj.override).push(obj);
+                }
+            });
+
+            // Store override map globally for filtering
+            window.overrideMap = overrideMap;
+
+            // Filter out alternatives from the main objects array - they won't be separate cards
+            const baseObjects = allObjects.filter(obj => obj.isBase);
+            console.log(`Loaded ${baseObjects.length} base objects with ${allObjects.length - baseObjects.length} alternatives`);
+
+            // Replace allObjects with just base objects
+            allObjects = baseObjects;
+
+            if (allObjects.length === 0) {
+                showMessage('No base objects were loaded!', 'error');
+                return;
+            }
+
+            console.log(`\n=== SUMMARY ===`);
+            console.log(`Total objects processed: ${objectCount}`);
+            console.log(`Total objects loaded: ${allObjects.length}`);
+
+            if (allObjects.length === 0) {
+                showMessage('No objects were loaded! Check console for details.', 'error');
+                return;
+            }
+
+            // Initialize game
+            initializeGame();
+            const loader = document.getElementById('simpleLoader');
+            if (loader) loader.classList.add('hidden');
+        } catch (error) {
+            console.error('Detailed error:', error);
+            if (loader) loader.classList.add('hidden');
+            showMessage(`Error loading object data: ${error.message}`, 'error');
+        }
+    }
+
+    function toggleCategory(category) {
+        const checkbox = document.getElementById(`cat${category}Toggle`);
+        console.log(`Toggling category ${category}, checked:`, checkbox.checked);
+
+        if (checkbox.checked) {
+            if (!activeCategories.includes(category)) {
+                activeCategories.push(category);
+                console.log(`Added category ${category}, active categories now:`, activeCategories);
+            }
+        } else {
+            activeCategories = activeCategories.filter(c => c !== category);
+            console.log(`Removed category ${category}, active categories now:`, activeCategories);
+        }
+    }
+
+    function shouldIncludeObject(obj, lst) {
+        // First check: if exclude is false (0), always include
+        if (!obj.exclude) {
+            return true;
+        }
+
+        // Object has exclude > 0, check if it has an override
+        if (obj.override == 0) {
+            // No override, object is excluded
+            console.log(`${obj.name} excluded (no override)`);
+            return false;
+        }
+
+        // Find the override object
+        const overrideObj = lst.find(o => o.name === obj.override);
+        if (overrideObj) {
+            // Override object not found, object is excluded
+            console.log(`${obj.name} excluded (override ${obj.override} found)`);
+            return false;
+        }
+        if (!overrideObj) {
+            // Override object not found, object is included
+            console.log(`${obj.name} included (override ${obj.override} not found)`);
+            return true;
+        }
+    }
+
+    function applyCategoryFilter() {
+        console.log('Applying filter with active categories:', activeCategories);
+
+        // Simple explicit check
+        tempobjects = [];
+
+        for (let obj of allObjects) {
+            let include = false;
+
+            // Check each active category
+            if (activeCategories.includes(1) && obj.KantoDex > 0) {
+                include = true;
+                console.log(`Including ${obj.name}: cat1=${obj.KantoDex} > 0`);
+            }
+            if (activeCategories.includes(2) && obj.JohtoDex > 0) {
+                include = true;
+                console.log(`Including ${obj.name}: cat2=${obj.JohtoDex} > 0`);
+            }
+            if (activeCategories.includes(3) && obj.HoennDex > 0) {
+                include = true;
+                console.log(`Including ${obj.name}: cat3=${obj.HoennDex} > 0`);
+            }
+            if (activeCategories.includes(4) && obj.SinnohDex > 0) {
+                include = true;
+                console.log(`Including ${obj.name}: cat4=${obj.SinnohDex} > 0`);
+            }
+            if (activeCategories.includes(5) && obj.UnovaDex > 0) {
+                include = true;
+                console.log(`Including ${obj.name}: cat5=${obj.UnovaDex} > 0`);
+            }
+            if (activeCategories.includes(6) && obj.KalosDex > 0) {
+                include = true;
+                console.log(`Including ${obj.name}: cat6=${obj.KalosDex} > 0`);
+            }
+            if (activeCategories.includes(7) && obj.AlolaDex > 0) {
+                include = true;
+                console.log(`Including ${obj.name}: cat7=${obj.AlolaDex} > 0`);
+            }
+            if (activeCategories.includes(8) && obj.AlolaDLC > 0) {
+                include = true;
+                console.log(`Including ${obj.name}: cat8=${obj.AlolaDLC} > 0`);
+            }
+            if (activeCategories.includes(9) && obj.GalarDex > 0) {
+                include = true;
+                console.log(`Including ${obj.name}: cat9=${obj.GalarDex} > 0`);
+            }
+            if (activeCategories.includes(10) && obj.GalarDLC > 0) {
+                include = true;
+                console.log(`Including ${obj.name}: cat10=${obj.GalarDLC} > 0`);
+            }
+            if (activeCategories.includes(11) && obj.HisuiDex > 0) {
+                include = true;
+                console.log(`Including ${obj.name}: cat11=${obj.HisuiDex} > 0`);
+            }
+            if (activeCategories.includes(12) && obj.PaldeaDex > 0) {
+                include = true;
+                console.log(`Including ${obj.name}: cat12=${obj.PaldeaDex} > 0`);
+            }
+            if (activeCategories.includes(13) && obj.PaldeaDLC > 0) {
+                include = true;
+                console.log(`Including ${obj.name}: cat13=${obj.PaldeaDLC} > 0`);
+            }
+            if (activeCategories.includes(14) && obj.LumioseDex > 0) {
+                include = true;
+                console.log(`Including ${obj.name}: cat14=${obj.LumioseDex} > 0`);
+            }
+            if (activeCategories.includes(15) && obj.LumioseDLC > 0) {
+                include = true;
+                console.log(`Including ${obj.name}: cat15=${obj.LumioseDLC} > 0`);
+            }
+
+            if (include) {
+                tempobjects.push({...obj, group: null});
+            } else {
+                console.log(`Excluding ${obj.name}: no matching categories`);
+            }
+        }
+
+        objects = [];
+
+
+        for (let obj of tempobjects) {
+            if (shouldIncludeObject(obj, tempobjects)) {
+                objects.push({...obj, group: null});
+            }
+        }
+
+        console.log(`Filtered objects count: ${objects.length}`);
+
+        if (objects.length === 0) {
+            showMessage('No objects match selected categories!', 'warning');
+            return;
+        }
+
+        // Calculate number of groups needed (3 objects per group)
+        const groupCount = Math.ceil(objects.length / 3);
+
+        // Create groups
+        groups = [];
+        for (let i = 0; i < groupCount; i++) {
+            groups.push({
+                id: i,
+                name: `Group ${String.fromCharCode(65 + i)}`,
+                objects: []
+            });
+        }
+
+        // Shuffle objects
+        shuffleArray(objects);
+
+        // Update UI
+        document.getElementById('filteredCount').textContent =
+            `Showing ${objects.length} objects`;
+
+        renderGame();
+
+        const categoryNames = activeCategories.map(c => `Cat ${c}`).join(', ');
+        showMessage(`Loaded ${objects.length} objects from ${categoryNames}`, 'warning');
+    }
+
+    function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+    }
+
+    function initializeGame() {
+        window.gameStartTime = Date.now();
+        // Ensure all categories are checked
+        document.getElementById('cat1Toggle').checked = false;
+        document.getElementById('cat2Toggle').checked = false;
+        document.getElementById('cat3Toggle').checked = false;
+        document.getElementById('cat4Toggle').checked = false;
+        document.getElementById('cat5Toggle').checked = false;
+        document.getElementById('cat6Toggle').checked = false;
+        document.getElementById('cat7Toggle').checked = false;
+        document.getElementById('cat8Toggle').checked = false;
+        document.getElementById('cat9Toggle').checked = false;
+        document.getElementById('cat10Toggle').checked = false;
+        document.getElementById('cat11Toggle').checked = false;
+        document.getElementById('cat12Toggle').checked = false;
+        document.getElementById('cat13Toggle').checked = false;
+        document.getElementById('cat14Toggle').checked = true;
+        document.getElementById('cat15Toggle').checked = true;
+        activeCategories = [14, 15];
+
+        currentSort = 'number-asc';
+        const sortSelect = document.getElementById('sortSelect');
+        if (sortSelect) {
+            sortSelect.value = 'number-asc';
+        }
+
+        if (!loadGameState()) {
+            // No saved state, start fresh
+            applyCategoryFilter();
+        } else {
+            renderGame();
+        }
+    }
+
+    function renderGame() {
+        renderObjectsPool();
+        renderGroups();
+        renderRemainderBox()
+    }
+
+    function renderObjectsPool() {
+        const poolContainer = document.getElementById('objectsPool');
+        poolContainer.innerHTML = '';
+
+        // Get unplaced objects
+        const unplacedObjects = objects.filter(obj => obj.group === null);
+        const sortedObjects = sortObjects(unplacedObjects);
+
+        sortedObjects.forEach(obj => {
+            const objectCard = createObjectCard(obj);
+            poolContainer.appendChild(objectCard);
+        });
+
+        // Make the pool container a drop target
+        poolContainer.addEventListener('dragover', handleDragOver);
+        poolContainer.addEventListener('drop', handlePoolDrop);
+        poolContainer.addEventListener('dragenter', handleDragEnter);
+        poolContainer.addEventListener('dragleave', handleDragLeave);
+    }
+
+    function handlePoolDrop(e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const poolContainer = document.getElementById('objectsPool');
+        poolContainer.classList.remove('drag-over', 'drag-valid', 'drag-invalid');
+
+        const objectId = e.dataTransfer.getData('text/plain');
+        const object = objects.find(obj => obj.id === objectId);
+
+        if (!object) return;
+
+        // Move object back to pool
+        object.group = null;
+        renderGame();
+        updateStats();
+        showMessage('Object returned to pool', 'warning');
+    }
+
+    function handlePoolDragEnter(e) {
+        e.preventDefault();
+        const poolContainer = document.getElementById('objectsPool');
+        poolContainer.classList.add('drag-valid'); // Pool is always valid
+    }
+
+    function handlePoolDragLeave(e) {
+        const poolContainer = document.getElementById('objectsPool');
+        poolContainer.classList.remove('drag-over', 'drag-valid', 'drag-invalid');
+    }
+
+    function createObjectCard(obj) {
+        const card = document.createElement('div');
+
+        // Determine card class based on categories
+        let categoryClass = 'category-multi';
+        if (obj.categories.length === 1) {
+            categoryClass = `category-${obj.categories[0]}`;
+        }
+
+        // Add alternative-active class if this is an alternative (not base)
+        const alternativeClass = !obj.isBase ? 'alternative-active' : '';
+
+        card.className = `object-card ${categoryClass}`;
+        card.setAttribute('draggable', 'true');
+        card.setAttribute('data-object-id', obj.id);
+        card.setAttribute('data-group-id', obj.group !== null ? obj.group : 'pool');
+
+        // Store full object data for tooltip/context menu
+        card.setAttribute('data-object-name', obj.name);
+        card.setAttribute('data-object-cat1', obj.KantoDex);
+        card.setAttribute('data-object-cat2', obj.JohtoDex);
+        card.setAttribute('data-object-cat3', obj.HoennDex);
+        card.setAttribute('data-object-cat4', obj.SinnohDex);
+        card.setAttribute('data-object-cat5', obj.UnovaDex);
+        card.setAttribute('data-object-cat6', obj.KalosDex);
+        card.setAttribute('data-object-cat7', obj.AlolaDex);
+        card.setAttribute('data-object-cat8', obj.AlolaDLC);
+        card.setAttribute('data-object-cat9', obj.GalarDex);
+        card.setAttribute('data-object-cat10', obj.GalarDLC);
+        card.setAttribute('data-object-cat11', obj.HisuiDex);
+        card.setAttribute('data-object-cat12', obj.PaldeaDex);
+        card.setAttribute('data-object-cat13', obj.PaldeaDLC);
+        card.setAttribute('data-object-cat14', obj.LumioseDex);
+        card.setAttribute('data-object-cat15', obj.LumioseDLC);
+        if (obj.alternatives && obj.alternatives.length > 0) {
+            card.setAttribute('data-has-alternatives', 'true');
+        }
+
+        // Add attribute if object has alternatives
+        if (obj.alternatives && obj.alternatives.length > 0) {
+            card.setAttribute('data-has-alternatives', 'true');
+        }
+
+        // Add attribute if object is an alternative (has baseObject)
+        if (!obj.isBase && obj.baseObject) {
+            card.setAttribute('data-is-alternative', 'true');
+        }
+
+        // Create image path - using Django's static tag
+        // Since we're in JavaScript, we need to construct the URL
+        const imageUrl = `/static/images/pokemonicons/${obj.filename}.png`;
+
+        // Create property dots (limit to first 6 to keep card clean)
+        const displayProperties = obj.properties.slice(0, 18);
+        const propertyDots = displayProperties.map(prop =>
+            `<span class="property-dot" style="background: ${propertyColors[prop] || '#95a5a6'}"
+                   title="${prop}"></span>`
+        ).join('');
+
+        let validAltCount = 0;
+        obj.alternatives.forEach((alt, idx) => {
+            if (objectPassesFilter(alt)) {
+                validAltCount = 1
+            }
+        })
+
+        // Determine which icon to show
+        let switchingIcon = '';
+
+        if (obj.isBase && validAltCount > 0) {
+            switchingIcon = `<span class="switching-icon" title="${validAltCount} alternative version(s) available">🔄</span>`;
+        }
+        if (!obj.isBase && obj.baseObject) {
+            switchingIcon = `<span class="switching-icon" title="Switch back to base (${obj.baseObject.name})">🔄</span>`;
+        }
+
+        card.innerHTML = `
+            <img src="${imageUrl}"
+                 alt="${obj.name}"
+                 class="object-image"
+                 onerror="this.src='/static/images/icons/default.png'; this.onerror=null;"
+                 loading="lazy"
+                 title="${obj.name}">
+            <div class="property-dots">
+                ${propertyDots}
+            </div>
+            ${switchingIcon}
+        `;
+
+        // Right-click to show full properties
+        card.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            showContextMenu(e, obj);
+        });
+
+        // Optional: Show tooltip on hover (simpler than context menu)
+        card.addEventListener('mouseenter', (e) => {
+            // Could show a simple tooltip if desired
+        });
+
+        // Drag events
+        card.addEventListener('dragstart', handleDragStart);
+        card.addEventListener('dragend', handleDragEnd);
+
+        return card;
+    }
+
+    function toggleAllCategories(turnOn) {
+        // Update all checkboxes
+        for (let i = 1; i <= 15; i++) {
+            const checkbox = document.getElementById(`cat${i}Toggle`);
+            if (checkbox) {
+                checkbox.checked = turnOn;
+            }
+        }
+
+        // Update activeCategories array
+        if (turnOn) {
+            activeCategories = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
+        } else {
+            activeCategories = [];
+        }
+
+        const state = turnOn ? 'enabled' : 'disabled';
+        showMessage(`All categories ${state} - Click 'Apply Filters' to update`, 'warning');
+    }
+
+    function renderGroups() {
+        const groupsGrid = document.getElementById('groupsGrid');
+        groupsGrid.innerHTML = '';
+
+        groups.forEach(group => {
+            const groupObjects = objects.filter(obj => obj.group === group.id);
+            const objectCount = groupObjects.length;
+
+            const groupDiv = document.createElement('div');
+            groupDiv.className = 'group';
+
+            // Add completion class if group has 3 objects
+            if (objectCount === 3) {
+                groupDiv.classList.add('complete');
+            } else if (objectCount > 3) {
+                groupDiv.classList.add('overfull');
+            }
+
+            groupDiv.setAttribute('data-group-id', group.id);
+
+            // Create objects container
+            const objectsDiv = document.createElement('div');
+            objectsDiv.className = 'group-objects';
+            objectsDiv.setAttribute('data-group-id', group.id);
+
+            // Add each object as a proper DOM element with event listeners
+            groupObjects.forEach(obj => {
+                const objectCard = createObjectCard(obj);
+                objectsDiv.appendChild(objectCard);
+            });
+
+            // Add drop zone event listeners to the objects container
+            objectsDiv.addEventListener('dragover', handleDragOver);
+            objectsDiv.addEventListener('drop', handleDrop);
+            objectsDiv.addEventListener('dragenter', handleDragEnter);
+            objectsDiv.addEventListener('dragleave', handleDragLeave);
+
+            // Assemble the group
+            groupDiv.appendChild(objectsDiv);
+
+            groupsGrid.appendChild(groupDiv);
+        });
+    }
+
+    function renderRemainderBox() {
+        const groupsGrid = document.getElementById('groupsGrid');
+
+        // Remove existing remainder box if any
+        const existingRemainder = document.querySelector('.remainder-section');
+        if (existingRemainder) {
+            existingRemainder.remove();
+        }
+
+        // Calculate remainder
+        const remainder = objects.length % 3;
+
+        // Only show remainder box if remainder is 1 or 2
+        if (remainder === 0) return;
+
+        // Find objects that should be in remainder box
+        // The remainder box gets the last 'remainder' objects in the sorted order
+        const placedCount = objects.filter(obj => obj.group !== null).length;
+        const unplacedObjects = objects.filter(obj => obj.group === null);
+
+        // Create remainder section
+        const remainderSection = document.createElement('div');
+        remainderSection.className = 'remainder-section';
+
+        const remainderHeader = document.createElement('div');
+        remainderHeader.className = 'remainder-header';
+        remainderHeader.innerHTML = `
+            <h3>Remainder Box</h3>
+            <span class="remainder-badge">Holds ${remainder} Pokémon</span>
+        `;
+
+        const remainderBox = document.createElement('div');
+        remainderBox.className = 'remainder-box';
+        remainderBox.setAttribute('data-group-id', 'remainder');
+
+        const objectsDiv = document.createElement('div');
+        objectsDiv.className = 'group-objects';
+        objectsDiv.setAttribute('data-group-id', 'remainder');
+
+        // Add objects that are in the remainder box (group = 'remainder')
+        const remainderObjects = objects.filter(obj => obj.group === 'remainder');
+        remainderObjects.forEach(obj => {
+            const objectCard = createObjectCard(obj);
+            objectsDiv.appendChild(objectCard);
+        });
+
+        // Add completion class if remainder box has the right number
+        if (remainderObjects.length === remainder) {
+            remainderBox.classList.add('complete');
+        }
+
+        // Add drop zone event listeners
+        objectsDiv.addEventListener('dragover', handleDragOver);
+        objectsDiv.addEventListener('drop', handleRemainderDrop);
+        objectsDiv.addEventListener('dragenter', handleDragEnter);
+        objectsDiv.addEventListener('dragleave', handleDragLeave);
+
+        remainderBox.appendChild(objectsDiv);
+        remainderSection.appendChild(remainderHeader);
+        remainderSection.appendChild(remainderBox);
+
+        // Add to groups grid (or after groups grid)
+        groupsGrid.parentNode.appendChild(remainderSection);
+    }
+
+    // Show help modal
+    function showHelp() {
+        const modal = document.getElementById('helpModal');
+        modal.style.display = 'block';
+
+        // Prevent background scrolling
+        document.body.style.overflow = 'hidden';
+    }
+
+    // Close help modal
+    function closeHelp() {
+        const modal = document.getElementById('helpModal');
+        modal.style.display = 'none';
+
+        // Restore background scrolling
+        document.body.style.overflow = '';
+    }
+
+    // Close modal when clicking outside
+    window.onclick = function(event) {
+        const modal = document.getElementById('helpModal');
+        if (event.target === modal) {
+            closeHelp();
+        }
+    }
+
+    // Close modal with Escape key
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            const modal = document.getElementById('helpModal');
+            if (modal.style.display === 'block') {
+                closeHelp();
+            }
+        }
+    });
+
+    function handleRemainderDrop(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        this.classList.remove('drag-over', 'drag-valid', 'drag-invalid');
+
+        const objectId = e.dataTransfer.getData('text/plain');
+        const object = objects.find(obj => obj.id === objectId);
+
+        if (!object) return;
+
+        // Calculate remainder
+        const remainder = objects.length % 3;
+
+        // Check remainder box capacity
+        const remainderObjects = objects.filter(obj => obj.group === 'remainder');
+        if (remainderObjects.length >= remainder) {
+            showMessage(`Remainder box can only hold ${remainder} object${remainder > 1 ? 's' : ''}!`, 'warning');
+            return;
+        }
+
+        // Store original group
+        const originalGroup = object.group;
+
+        // Temporarily remove for conflict check
+        object.group = null;
+
+        // Check if object can be placed in remainder box
+        // (No property conflicts needed for remainder box)
+        const canPlace = canPlaceInRemainderBox(object, remainderObjects);
+
+        if (!canPlace) {
+            object.group = originalGroup;
+            showMessage('Object shares properties with others in remainder box!', 'error');
+            renderGame();
+            return;
+        }
+
+        // Place in remainder box
+        object.group = 'remainder';
+
+        renderGame();
+        updateStats();
+        saveGameState();
+        showMessage('Object moved to remainder box', 'warning');
+    }
+
+    javascript
+
+    function canPlaceInRemainderBox(object, remainderObjects) {
+        // Same property conflict rules apply in remainder box
+        for (let remainderObj of remainderObjects) {
+            for (let prop of object.properties) {
+                if (remainderObj.properties.includes(prop)) {
+                    console.log(`Conflict in remainder box: ${object.name} shares '${prop}' with ${remainderObj.name}`);
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    // Sort state
+    function applySort() {
+        const sortSelect = document.getElementById('sortSelect');
+        currentSort = sortSelect.value;
+        renderObjectsPool();
+    }
+
+    function sortObjects(objectsArray) {
+        if (currentSort === 'none') return objectsArray;
+
+        const sorted = [...objectsArray];
+
+        switch(currentSort) {
+            case 'number-asc':
+                sorted.sort((a, b) => (a.number || 0) - (b.number || 0));
+                break;
+            case 'name-asc':
+                sorted.sort((a, b) => a.name.localeCompare(b.name));
+                break;
+        }
+
+        return sorted;
+    }
+
+    function saveGameState() {
+        try {
+            const gameState = {
+                objects: objects.map(obj => ({
+                    id: obj.id,
+                    name: obj.name,
+                    group: obj.group,
+                    isBase: obj.isBase,
+                    // Store minimal data needed to reconstruct
+                    filename: obj.filename,
+                    number: obj.number,
+                    categories: obj.categories,
+                    primaryCategory: obj.primaryCategory,
+                    category1: obj.category1,
+                    category2: obj.category2,
+                    category3: obj.category3,
+                    category4: obj.category4,
+                    category5: obj.category5,
+                    category6: obj.category6,
+                    category7: obj.category7,
+                    category8: obj.category8,
+                    category9: obj.category9,
+                    category10: obj.category10,
+                    category11: obj.category11,
+                    category12: obj.category12,
+                    category13: obj.category13,
+                    properties: obj.properties,
+                    properties1: obj.properties1,
+                    properties2: obj.properties2,
+                    baseObject: obj.baseObject ? { name: obj.baseObject.name } : null
+                })),
+                groups: groups,
+                activeCategories: activeCategories,
+                currentSort: currentSort,
+                timestamp: new Date().getTime()
+            };
+
+            sessionStorage.setItem('sortingGameState', JSON.stringify(gameState));
+            console.log('Game state saved');
+        } catch (e) {
+            console.warn('Failed to save game state:', e);
+        }
+    }
+
+    // Load game state from sessionStorage
+    function loadGameState() {
+        try {
+            const savedState = sessionStorage.getItem('sortingGameState');
+            if (!savedState) return false;
+
+            const state = JSON.parse(savedState);
+
+            // Check if save is too old (optional - e.g., 24 hours)
+            const now = new Date().getTime();
+            const oneDay = 24 * 60 * 60 * 1000;
+            if (now - state.timestamp > oneDay) {
+                console.log('Saved state is too old, starting fresh');
+                sessionStorage.removeItem('sortingGameState');
+                return false;
+            }
+
+            // Restore objects (need to reconnect references)
+            objects = state.objects.map(savedObj => {
+                // Find the full object from allObjects to get complete data
+                const fullObj = allObjects.find(o => o.name === savedObj.name) || savedObj;
+                return {
+                    ...fullObj,
+                    group: savedObj.group,
+                    // Reconnect baseObject reference if needed
+                    baseObject: savedObj.baseObject ?
+                        allObjects.find(o => o.name === savedObj.baseObject.name) : null
+                };
+            });
+
+            groups = state.groups;
+            activeCategories = state.activeCategories;
+            currentSort = state.currentSort || 'none';
+
+            // Update UI to match restored state
+            updateCategoryCheckboxes();
+            if (currentSort !== 'none') {
+                const sortSelect = document.getElementById('sortSelect');
+                if (sortSelect) sortSelect.value = currentSort;
+            }
+
+            console.log('Game state loaded');
+            return true;
+        } catch (e) {
+            console.warn('Failed to load game state:', e);
+            return false;
+        }
+    }
+
+    // Update checkboxes to match activeCategories
+    function updateCategoryCheckboxes() {
+        for (let i = 1; i <= 13; i++) {
+            const checkbox = document.getElementById(`cat${i}Toggle`);
+            if (checkbox) {
+                checkbox.checked = activeCategories.includes(i);
+            }
+        }
+    }
+
+    function showContextMenu(e, obj) {
+        e.preventDefault();
+
+        const menu = document.getElementById('contextMenu');
+        const content = document.getElementById('contextMenuContent');
+
+        // Hide any existing menu
+        menu.style.display = 'none';
+
+        // Group properties by their source lists (now only 1 and 2)
+        const allProps = [];
+        if (obj.x2Eff && obj.x2Eff.length) {
+            allProps.push(...obj.x2Eff.map(p => ({ prop: p, source: 1 })));
+        }
+        if (obj.x4Eff && obj.x4Eff.length) {
+            allProps.push(...obj.x4Eff.map(p => ({ prop: p, source: 2 })));
+        }
+
+        const propertyItems = allProps.map(item =>
+            `<li style="color: ${propertyColors[item.prop] || '#333'}">
+                ${item.prop} <span style="font-size:0.7rem; opacity:0.7;">(src:${item.source})</span>
+            </li>`
+        ).join('');
+
+    // Create property chips instead of list items
+    const propertyChips = allProps.map(item =>
+        `<span class="property-chip" style="background: ${propertyColors[item.prop] || '#95a5a6'};">
+            ${item.prop}
+        </span>`
+    ).join('');
+
+
+    // Build action buttons
+    let actionsHtml = '';
+
+    // If this is an alternative (has baseObject), show "Switch to base" option
+    if (!obj.isBase && obj.baseObject) {
+        actionsHtml = `
+            <div style="margin-top: 10px; border-top: 1px solid #eee; padding-top: 8px;">
+                <button class="action-btn switch-base-btn" data-object-id="${obj.id}">
+                    🔄 Switch to base (${obj.baseObject.name})
+                </button>
+                <div style="font-size:0.7rem; color:#666; margin-bottom:6px; font-style:italic;">
+                    Switching will return Pokémon to sorting pool
+                </div>
+            </div>
+        `;
+    }
+
+    // Build alternatives section if they exist (for base objects)
+    let alternativesHtml = '';
+    if (obj.isBase && obj.alternatives && obj.alternatives.length > 0) {
+
+        // Filter alternatives to only show those allowed by current category filters
+        console.log(`Checking ${obj.alternatives.length} alternatives for ${obj.name}:`);
+        const validAlternatives = obj.alternatives.filter(alt => {
+            console.log(`\n--- Checking alternative: ${alt.name} ---`);
+            const passes = objectPassesFilter(alt);
+            console.log(`Result: ${passes ? 'ALLOWED' : 'FILTERED OUT'}`);
+            return passes;
+        });
+
+        console.log(`Valid alternatives count: ${validAlternatives.length} out of ${obj.alternatives.length}`);
+        if (validAlternatives.length > 0) {
+            const altButtons = validAlternatives.map((alt, index) => {
+                // Find original index for switching
+                const originalIndex = obj.alternatives.findIndex(a => a.name === alt.name);
+                return `<button class="action-btn alt-switch-btn" data-alt-index="${originalIndex}" data-base-id="${obj.id}">
+                    🔀 Switch to ${alt.name}
+                </button>`;
+            }).join('');
+
+            alternativesHtml = `
+                <div style="margin-top: 10px; border-top: 1px solid #eee; padding-top: 8px;">
+                    <strong>Alternatives (${validAlternatives.length} available):</strong>
+                    <div style="display: flex; flex-direction: column; gap: 4px; margin-top: 6px;">
+                        ${altButtons}
+                    </div>
+                    <div style="font-size:0.7rem; color:#666; margin-bottom:6px; font-style:italic;">
+                    Switching will return Pokémon to sorting pool
+                    </div>
+                </div>
+            `;
+        } else {
+            alternativesHtml = `
+                <div style="margin-top: 10px; border-top: 1px solid #eee; padding-top: 8px; opacity: 0.5;">
+                    <span style="font-size:0.7rem; color:#666;">No alternatives available with current filters</span>
+                </div>
+            `;
+        }
+    }
+
+        content.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                <img src="/static/images/pokemonicons/${obj.filename}.png"
+                     alt="${obj.name}"
+                     style="width: 64px; height: 64px; object-fit: contain; margin: auto;">
+                </div>
+            </div>
+            <div class="context-section">
+                <div class="context-section-title">Weaknesses</div>
+                <div class="property-chip-container">
+                    ${propertyChips || '<span class="no-properties">No properties</span>'}
+                </div>
+            </div>
+            ${actionsHtml}
+            ${alternativesHtml}
+        `;
+
+        menu.style.display = 'block';
+        menu.style.left = e.pageX + 'px';
+        menu.style.top = e.pageY + 'px';
+
+        // Add event listeners to alternative buttons
+        if (obj.alternatives && obj.alternatives.length > 0) {
+            const altButtons = menu.querySelectorAll('.alt-switch-btn');
+            altButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const altIndex = parseInt(btn.dataset.altIndex);
+                    const baseId = btn.dataset.baseId;
+                    switchToAlternative(baseId, altIndex);
+                    menu.style.display = 'none';
+                });
+            });
+        }
+
+        // Add event listener to switch back to base button
+        const switchBaseBtn = menu.querySelector('.switch-base-btn');
+        if (switchBaseBtn) {
+            switchBaseBtn.addEventListener('click', () => {
+                const altId = switchBaseBtn.dataset.objectId;
+                switchToBase(altId);
+                menu.style.display = 'none';
+            });
+        }
+
+        // Hide menu when clicking elsewhere
+        setTimeout(() => {
+            document.addEventListener('click', function hideMenu() {
+                menu.style.display = 'none';
+                document.removeEventListener('click', hideMenu);
+            });
+        }, 100);
+
+        // Show menu and position it
+        menu.style.display = 'block';
+
+        // Use client coordinates for more reliable positioning
+        let left = e.clientX;
+        let top = e.clientY;
+
+        // Get menu dimensions
+        const menuWidth = menu.offsetWidth;
+        const menuHeight = menu.offsetHeight;
+
+        // Adjust for viewport boundaries
+        if (left + menuWidth > window.innerWidth) {
+            left = window.innerWidth - menuWidth - 10;
+        }
+
+        if (top + menuHeight > window.innerHeight) {
+            top = window.innerHeight - menuHeight - 10;
+        }
+
+        // Apply position (using fixed positioning)
+        menu.style.left = left + 'px';
+        menu.style.top = top + 'px';
+
+        // Hide on any interaction outside
+        const hideMenu = (event) => {
+            if (!menu.contains(event.target)) {
+                menu.style.display = 'none';
+                document.removeEventListener('click', hideMenu);
+                document.removeEventListener('scroll', hideMenu);
+            }
+        };
+
+        setTimeout(() => {
+            document.addEventListener('click', hideMenu);
+            document.addEventListener('scroll', hideMenu);
+        }, 100);
+    }
+
+    function switchToAlternative(baseId, altIndex) {
+        // Find the base object
+        const baseObj = allObjects.find(obj => obj.id === baseId);
+        if (!baseObj || !baseObj.alternatives || !baseObj.alternatives[altIndex]) return;
+
+        const altObj = baseObj.alternatives[altIndex];
+
+        // Find the actual game object (might be in objects array)
+        const gameObj = objects.find(obj => obj.id === baseId);
+        if (!gameObj) return;
+
+        // Check if object is in a group
+        const wasInGroup = gameObj.group !== null && gameObj.group !== 'pool';
+        const groupId = gameObj.group;
+
+        // Remember the group this object is in
+        const previousGroup = gameObj.group;
+
+        // Create a new object that's a copy of the alternative
+        const switchedObj = {
+            ...altObj,
+            id: gameObj.id, // Keep the same ID
+            name: altObj.name,
+            filename: altObj.filename || gameObj.filename,
+            categories: altObj.categories,
+            primaryCategory: altObj.primaryCategory,
+            KantoDex: altObj.KantoDex,
+            JohtoDex: altObj.JohtoDex,
+            HoennDex: altObj.HoennDex,
+            SinnohDex: altObj.SinnohDex,
+            UnovaDex: altObj.UnovaDex,
+            KalosDex: altObj.KalosDex,
+            AlolaDex: altObj.AlolaDex,
+            AlolaDLC: altObj.AlolaDLC,
+            GalarDex: altObj.GalarDex,
+            GalarDLC: altObj.GalarDLC,
+            HisuiDex: altObj.HisuiDex,
+            PaldeaDex: altObj.PaldeaDex,
+            PaldeaDLC: altObj.PaldeaDLC,
+            LumioseDex: altObj.LumioseDex,
+            LumioseDLC: altObj.LumioseDLC,
+            properties: altObj.properties,
+            x2Eff: altObj.x2Eff,
+            x4Eff: altObj.x4Eff,
+            isBase: false,
+            baseSpecies: baseObj.name,
+            baseObject: baseObj, // Store reference to base for switching back
+            group: wasInGroup ? null : previousGroup // Stay in the same group
+        };
+
+        // Replace the object in the objects array
+        const index = objects.findIndex(obj => obj.id === baseId);
+        if (index !== -1) {
+            objects[index] = switchedObj;
+        }
+
+        // Re-render
+        renderGame();
+        showMessage(`Switched to ${altObj.name}`, 'warning');
+    }
+
+    function handleDragStart(e) {
+        draggedItem = this;
+        this.classList.add('dragging');
+        e.dataTransfer.setData('text/plain', this.dataset.objectId);
+        e.dataTransfer.setData('source-group', this.dataset.groupId); // Store source group
+        e.dataTransfer.effectAllowed = 'move';
+    }
+
+    function handleDragEnd(e) {
+        this.classList.remove('dragging');
+        document.querySelectorAll('.group-objects').forEach(el => {
+            el.classList.remove('drag-over');
+        });
+    }
+
+    function switchToBase(altId) {
+        // Find the alternative object
+        const altObj = objects.find(obj => obj.id === altId);
+        if (!altObj || !altObj.baseObject) return;
+
+        const baseObj = altObj.baseObject;
+
+        // Check if object is in a group
+        const wasInGroup = altObj.group !== null && altObj.group !== 'pool';
+
+        // Remember the group
+        const previousGroup = altObj.group;
+
+        // Create a fresh copy of the base object
+        const switchedObj = {
+            ...baseObj,
+            id: altObj.id, // Keep the same ID
+            group: wasInGroup ? null : previousGroup,
+            // Make sure alternatives are still referenced
+            alternatives: baseObj.alternatives
+        };
+
+        // Replace the object in the objects array
+        const index = objects.findIndex(obj => obj.id === altId);
+        if (index !== -1) {
+            objects[index] = switchedObj;
+        }
+
+        // Re-render
+        renderGame();
+        showMessage(`Switched back to ${baseObj.name}`, 'warning');
+    }
+
+function handleDragOver(e) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+
+    // Don't show validation classes during drag over - we'll show on enter/leave
+    }
+
+    function handleDragEnter(e) {
+        e.preventDefault();
+
+        const targetGroupId = parseInt(this.dataset.groupId);
+        const objectId = e.dataTransfer.getData('text/plain');
+        const object = objects.find(obj => obj.id === objectId);
+
+        if (!object) return;
+
+        // Check if target group already has 3 objects
+        const targetGroupObjects = objects.filter(obj => obj.group === targetGroupId);
+        if (targetGroupObjects.length >= 3) {
+            this.classList.add('drag-invalid');
+            this.classList.remove('drag-valid');
+            return;
+        }
+
+        // Check if object can be placed here
+        const canPlace = canPlaceInGroup(object, targetGroupId);
+
+        if (canPlace) {
+            this.classList.add('drag-valid');
+            this.classList.remove('drag-invalid');
+        } else {
+            this.classList.add('drag-invalid');
+            this.classList.remove('drag-valid');
+        }
+    }
+
+    function handleDragLeave(e) {
+        this.classList.remove('drag-over');
+        this.classList.remove('drag-valid');
+        this.classList.remove('drag-invalid');
+    }
+
+    function handleDrop(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        this.classList.remove('drag-over', 'drag-valid', 'drag-invalid');
+
+        const objectId = e.dataTransfer.getData('text/plain');
+        const sourceGroupId = e.dataTransfer.getData('source-group');
+        const targetGroupId = parseInt(this.dataset.groupId);
+
+        const object = objects.find(obj => obj.id === objectId);
+
+        if (!object) return;
+
+        // Check if target group already has 3 objects
+        const targetGroupObjects = objects.filter(obj => obj.group === targetGroupId);
+        if (targetGroupObjects.length >= 3) {
+            showMessage('Groups can only have 3 objects!', 'warning');
+            return;
+        }
+
+        // If moving from one group to another, temporarily remove from source for conflict check
+        const originalGroup = object.group;
+        object.group = null; // Temporarily remove
+
+        // Check if object can be placed in target group (no shared properties)
+        const canPlace = canPlaceInGroup(object, targetGroupId);
+
+        if (!canPlace) {
+            // Restore original group if placement not allowed
+            object.group = originalGroup;
+            showMessage('Object shares properties with others in this group!', 'error');
+            renderGame(); // Re-render to ensure correct display
+            return;
+        }
+
+        // Place the object in target group
+        object.group = targetGroupId;
+
+        // If source was a group (not pool), we don't need to do anything else
+        // The object is now in the new group
+
+        renderGame();
+        updateStats();
+        saveGameState();
+
+        // Check if all objects are placed
+        const placedCount = objects.filter(obj => obj.group !== null).length;
+        if (placedCount === objects.length) {
+            showMessage('All objects placed! Click "Check" to verify solution.', 'warning');
+        } else {
+            showMessage(`Object moved to ${String.fromCharCode(65 + targetGroupId)}`, 'warning');
+        }
+    }
+
+    function handlePoolDrop(e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const poolContainer = document.getElementById('objectsPool');
+        poolContainer.classList.remove('drag-over', 'drag-valid', 'drag-invalid');
+
+        const objectId = e.dataTransfer.getData('text/plain');
+        const object = objects.find(obj => obj.id === objectId);
+
+        if (!object) return;
+
+        // Move object back to pool
+        object.group = null;
+        renderGame();
+        updateStats();
+        saveGameState();
+        showMessage('Object returned to pool', 'warning');
+    }
+
+    function canPlaceInGroup(object, targetGroupId) {
+        const groupObjects = objects.filter(obj =>
+            obj.group === targetGroupId && obj.id !== object.id // Exclude the object itself
+        );
+
+        for (let groupObj of groupObjects) {
+            for (let prop of object.properties) {
+                if (groupObj.properties.includes(prop)) {
+                    console.log(`Conflict: ${object.name} shares '${prop}' with ${groupObj.name}`);
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    function objectPassesFilter(obj) {
+        if (!obj) return false;
+
+        let include = false;
+
+        // Check each active category
+        if (activeCategories.includes(1) && obj.KantoDex > 0) {
+            include = true;
+            console.log(`Including ${obj.name}: cat1=${obj.KantoDex} > 0`);
+        }
+        if (activeCategories.includes(2) && obj.JohtoDex > 0) {
+            include = true;
+            console.log(`Including ${obj.name}: cat2=${obj.JohtoDex} > 0`);
+        }
+        if (activeCategories.includes(3) && obj.HoennDex > 0) {
+            include = true;
+            console.log(`Including ${obj.name}: cat3=${obj.HoennDex} > 0`);
+        }
+        if (activeCategories.includes(4) && obj.SinnohDex > 0) {
+            include = true;
+            console.log(`Including ${obj.name}: cat4=${obj.SinnohDex} > 0`);
+        }
+        if (activeCategories.includes(5) && obj.UnovaDex > 0) {
+            include = true;
+            console.log(`Including ${obj.name}: cat5=${obj.UnovaDex} > 0`);
+        }
+        if (activeCategories.includes(6) && obj.KalosDex > 0) {
+            include = true;
+            console.log(`Including ${obj.name}: cat6=${obj.KalosDex} > 0`);
+        }
+        if (activeCategories.includes(7) && obj.AlolaDex > 0) {
+            include = true;
+            console.log(`Including ${obj.name}: cat7=${obj.AlolaDex} > 0`);
+        }
+        if (activeCategories.includes(8) && obj.AlolaDLC > 0) {
+            include = true;
+            console.log(`Including ${obj.name}: cat8=${obj.AlolaDLC} > 0`);
+        }
+        if (activeCategories.includes(9) && obj.GalarDex > 0) {
+            include = true;
+            console.log(`Including ${obj.name}: cat9=${obj.GalarDex} > 0`);
+        }
+        if (activeCategories.includes(10) && obj.GalarDLC > 0) {
+            include = true;
+            console.log(`Including ${obj.name}: cat10=${obj.GalarDLC} > 0`);
+        }
+        if (activeCategories.includes(11) && obj.HisuiDex > 0) {
+            include = true;
+            console.log(`Including ${obj.name}: cat11=${obj.HisuiDex} > 0`);
+        }
+        if (activeCategories.includes(12) && obj.PaldeaDex > 0) {
+            include = true;
+            console.log(`Including ${obj.name}: cat12=${obj.PaldeaDex} > 0`);
+        }
+        if (activeCategories.includes(13) && obj.PaldeaDLC > 0) {
+            include = true;
+            console.log(`Including ${obj.name}: cat13=${obj.PaldeaDLC} > 0`);
+        }
+        if (activeCategories.includes(14) && obj.LumioseDex > 0) {
+            include = true;
+            console.log(`Including ${obj.name}: cat14=${obj.LumioseDex} > 0`);
+        }
+        if (activeCategories.includes(15) && obj.LumioseDLC > 0) {
+            include = true;
+            console.log(`Including ${obj.name}: cat15=${obj.LumioseDLC} > 0`);
+        }
+
+        if (include) {
+            console.log(`  ✓ ${obj.name} PASSED`);
+            return true;
+        } else {
+            console.log(`  ✗ ${obj.name} FAILED - no active category > 0`);
+            return false;
+        }
+    }
+
+    function updateStats() {
+        const placedCount = objects.filter(obj => obj.group !== null).length;
+    }
+    function checkSolution() {
+        const unplacedCount = objects.filter(obj => obj.group === null).length;
+        const totalObjects = objects.length;
+        const totalGroups = groups.length;
+        const remainder = totalObjects % 3;
+        const remainderObjects = objects.filter(obj => obj.group === 'remainder');
+
+        // Calculate time spent (optional - if you want to show this)
+        const startTime = window.gameStartTime || Date.now();
+        const timeSpent = Math.floor((Date.now() - startTime) / 1000);
+        const minutes = Math.floor(timeSpent / 60);
+        const seconds = timeSpent % 60;
+        const timeString = `${minutes}m ${seconds}s`;
+
+        // Case 1: Not all objects placed
+        if (unplacedCount > 0) {
+            showSolutionPopup({
+                success: false,
+                error: false,
+                details: `Pokémon remaining: ${unplacedCount}`
+            });
+            return;
+        }
+
+        // Case 3: Check each regular group has exactly 3 objects
+        for (let group of groups) {
+            const groupObjects = objects.filter(obj => obj.group === group.id);
+            if (groupObjects.length !== 3) {
+                showSolutionPopup({
+                    success: false,
+                    error: true,
+                    issues: [`Group ${String.fromCharCode(65 + group.id)} has ${groupObjects.length}/3 objects`],
+                    details: `Every group must contain exactly 3 objects.`
+                });
+                return;
+            }
+        }
+
+        // Case 4: Check all regular groups for property conflicts
+        const conflicts = [];
+        for (let group of groups) {
+            const groupObjects = objects.filter(obj => obj.group === group.id);
+            const groupLetter = String.fromCharCode(65 + group.id);
+
+            for (let i = 0; i < groupObjects.length; i++) {
+                for (let j = i + 1; j < groupObjects.length; j++) {
+                    for (let prop of groupObjects[i].properties) {
+                        if (groupObjects[j].properties.includes(prop)) {
+                            conflicts.push(
+                                `Group ${groupLetter}: "${prop}" shared by ` +
+                                `${groupObjects[i].name} and ${groupObjects[j].name}`
+                            );
+                        }
+                    }
+                }
+            }
+        }
+
+        // Case 5: Check remainder box for property conflicts
+        if (remainderObjects.length > 1) {
+            for (let i = 0; i < remainderObjects.length; i++) {
+                for (let j = i + 1; j < remainderObjects.length; j++) {
+                    for (let prop of remainderObjects[i].properties) {
+                        if (remainderObjects[j].properties.includes(prop)) {
+                            conflicts.push(
+                                `Remainder Box: "${prop}" shared by ` +
+                                `${remainderObjects[i].name} and ${remainderObjects[j].name}`
+                            );
+                        }
+                    }
+                }
+            }
+        }
+
+        // Final result
+        if (conflicts.length === 0) {
+            showSolutionPopup({
+                success: true,
+                completedGroups: groups.length,
+                totalGroups: groups.length,
+                totalObjects: totalObjects,
+                timeSpent: timeString
+            });
+        } else {
+            showSolutionPopup({
+                success: false,
+                error: true,
+                issues: conflicts.slice(0, 5), // Show first 5 conflicts
+                details: conflicts.length > 5 ?
+                    `Showing first 5 of ${conflicts.length} conflicts:<br>` +
+                    '<ul>' + conflicts.slice(0, 5).map(c => `<li>${c}</li>`).join('') + '</ul>' :
+                    '<ul>' + conflicts.map(c => `<li>${c}</li>`).join('') + '</ul>'
+            });
+        }
+    }
+
+    function resetGame() {
+        window.gameStartTime = Date.now();
+        objects.forEach(obj => obj.group = null);
+        renderGame();
+        sessionStorage.removeItem('sortingGameState');
+        showMessage('Game reset', 'warning');
+    }
+
+    function shuffleObjects() {
+        // Shuffle unplaced objects
+        const unplacedObjects = objects.filter(obj => obj.group === null);
+        shuffleArray(unplacedObjects);
+
+        // Reorder objects array
+        const placedObjects = objects.filter(obj => obj.group !== null);
+        objects = [...placedObjects, ...unplacedObjects];
+
+        renderObjectsPool();
+        showMessage('Objects shuffled', 'warning');
+    }
+
+    function showMessage(text, type) {
+        const messageDiv = document.getElementById('message');
+        messageDiv.innerHTML = text;
+        messageDiv.className = `message ${type}`;
+    }
+
+    function showSolutionPopup(result) {
+        console.log('Popup received:', result); // DEBUG: See what we're getting
+
+        const popup = document.getElementById('solutionPopup');
+        const header = document.getElementById('popupHeader');
+        const title = document.getElementById('popupTitle');
+        const message = document.getElementById('popupMessage');
+        const details = document.getElementById('popupDetails');
+
+        // Reset classes
+        header.className = 'popup-header';
+
+        // Set content based on result
+        if (result.success) {
+            console.log('Showing success popup'); // DEBUG
+            header.classList.add('success');
+            title.textContent = '🎉 Perfect Solution!';
+
+            // Check if the expected properties exist
+            console.log('Success result properties:', {
+                completedGroups: result.completedGroups,
+                totalGroups: result.totalGroups,
+                totalObjects: result.totalObjects,
+                timeSpent: result.timeSpent
+            });
+
+            let detailsHtml = `<strong>Time: ${result.timeSpent || '?'}`;
+            details.innerHTML = detailsHtml;
+
+        } else if (result.error) {
+            console.log('Showing error popup'); // DEBUG
+            header.classList.add('error');
+            title.textContent = '❌ Invalid Solution';
+
+            if (result.details) {
+                details.innerHTML = result.details;
+            } else if (result.issues) {
+                details.innerHTML = '<ul>' + result.issues.map(issue =>
+                    `<li>${issue}</li>`
+                ).join('') + '</ul>';
+            } else {
+                details.innerHTML = 'No details available';
+            }
+
+        } else {
+            console.log('Showing warning popup'); // DEBUG
+            header.classList.add('warning');
+            title.textContent = '⏳ In Progress';
+
+            details.innerHTML = result.details || 'Please place all objects first.';
+        }
+
+        // Show popup
+        popup.classList.add('show');
+    }
+
+    function closeSolutionPopup() {
+        const popup = document.getElementById('solutionPopup');
+        popup.classList.remove('show');
+    }
+
+    // Close popup with Escape key
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            const popup = document.getElementById('solutionPopup');
+            if (popup.classList.contains('show')) {
+                closeSolutionPopup();
+            }
+        }
+    });
+
+    // Load objects when page loads
+    window.onload = loadObjects;
+</script>
+{% endblock %}

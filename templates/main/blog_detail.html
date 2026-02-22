@@ -1,0 +1,123 @@
+{% extends 'main/base.html' %}
+{% load static %}
+
+{% block title %}{{ post.title }} - Pod Press Blog{% endblock %}
+
+{% block content %}
+<div class="blog-detail-container">
+    <article class="blog-post-full">
+        <div class="post-header">
+            <h1>{{ post.title }}</h1>
+
+            <div class="post-meta">
+                <span class="post-date">📅 Published: {{ post.published_date|date:"F j, Y" }}</span>
+                {% if post.updated_date > post.published_date %}
+                <span class="post-updated">✏️ Updated: {{ post.updated_date|date:"F j, Y" }}</span>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if post.featured_image %}
+        <div class="post-featured-image">
+            <img src="{{ post.featured_image.url }}" alt="{{ post.title }}">
+        </div>
+        {% endif %}
+
+        <div class="post-body">
+            {{ post.content|linebreaks }}
+        </div>
+
+        <div class="post-footer">
+            <a href="{% url 'blog' %}" class="back-to-blog">← Back to Blog</a>
+        </div>
+    </article>
+</div>
+
+<style>
+    .blog-detail-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 30px 20px;
+    }
+
+    .blog-post-full {
+        background: white;
+        border-radius: 15px;
+        padding: 40px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    }
+
+    .post-header {
+        margin-bottom: 30px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid #e9ecef;
+    }
+
+    .post-header h1 {
+        color: #2c3e50;
+        font-size: 2.2rem;
+        margin: 0 0 15px 0;
+    }
+
+    .post-meta {
+        color: #7f8c8d;
+        font-size: 0.95rem;
+        display: flex;
+        gap: 15px;
+        flex-wrap: wrap;
+    }
+
+    .post-featured-image {
+        margin: 30px 0;
+        text-align: center;
+    }
+
+    .post-featured-image img {
+        max-width: 100%;
+        max-height: 400px;
+        border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+
+    .post-body {
+        color: #2c3e50;
+        line-height: 1.8;
+        font-size: 1.1rem;
+    }
+
+    .post-body p {
+        margin: 20px 0;
+    }
+
+    .post-footer {
+        margin-top: 40px;
+        padding-top: 20px;
+        border-top: 1px solid #e9ecef;
+        text-align: center;
+    }
+
+    .back-to-blog {
+        display: inline-block;
+        padding: 10px 25px;
+        background: #595959;
+        color: white;
+        text-decoration: none;
+        border-radius: 5px;
+        transition: background-color 0.2s;
+    }
+
+    .back-to-blog:hover {
+        background: #CB7E29;
+    }
+
+    @media (max-width: 768px) {
+        .blog-post-full {
+            padding: 25px;
+        }
+
+        .post-header h1 {
+            font-size: 1.8rem;
+        }
+    }
+</style>
+{% endblock %}

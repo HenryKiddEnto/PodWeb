@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parasitoid Pod</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <div class="layout">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <!-- Logo Container -->
+            <a href="{% url 'home' %}" class="logo-link" title="Go to homepage">
+                <div class="logo-container">
+                    <img src="{% static 'images/GryonIcon.png' %}"
+                         alt="{{ site_name }} Logo"
+                         class="logo-image">
+                    <div class="site-title">
+                        {{ site_name|default:"Parasitoid" }}<span>{{ site_name_suffix|default:"Pod" }}</span>
+                    </div>
+                </div>
+            </a>
+            <!-- Apps Section (Sidebar Buttons) -->
+            <div class="apps-section">
+                <div class="apps-title">Tools</div>
+
+                {% for app in sidebar_apps %}
+                <a href="{{ app.url }}" class="app-button">
+                    {{ app.icon }} {{ app.name }}
+                </a>
+                {% empty %}
+                <!-- Default apps -->
+                <a href="{% url 'typechallenge' %}" class="app-button">
+                    🔥 Type Challenge
+                </a>
+                <a href="#" class="app-button" onclick="alert('Mystery wheels are my next project. Stay tuned!')">
+                    🛞 Mystery Wheels
+                </a>
+                <a href="{% url 'blog' %}" class="app-button">
+                    📰 Pod Press
+                </a>
+                <a href="{% url 'gallery' %}" class="app-button">
+                    🐝 Wasp Gallery
+                </a>
+                {% endfor %}
+            </div>
+            <div class="footer">
+                <p>&copy; 2026 Henry Kidd</p>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="content-card">
+                {% block content %}
+                <!-- Child templates will insert content here -->
+                {% endblock %}
+            </div>
+        </div>
+    </div>
+</body>
+</html>

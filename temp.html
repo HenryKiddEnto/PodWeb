@@ -1,0 +1,1322 @@
+{% extends 'main/base.html' %}
+{% load static %}
+
+{% block title %}Group Sorting Game{% endblock %}
+
+{% block content %}
+<div class="game-container">
+    <div class="game-header">
+        <h1>Team Challenge</h1>
+        <p class="game-instructions">
+            Create teams of three pokémon from the provided pool. Pokémon that share a weakness cannot be placed on the same team.
+
+        </p>
+
+        <div class="game-stats">
+            <div class="stat-box">
+                <span class="stat-label">Pokémon</span>
+                <span class="stat-value" id="objectsCount">0</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-label">Placed</span>
+                <span class="stat-value" id="placedCount">0</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-label">Teams</span>
+                <span class="stat-value" id="groupsCount">0</span>
+            </div>
+        </div>
+    </div>
+
+            <!-- Category Toggles -->
+        <div class="category-toggles">
+            <span class="category-label">Regions:</span>
+            <label class="toggle-btn category-1">
+                <input type="checkbox" id="cat1Toggle" checked onchange="toggleCategory(1)"> Kanto
+                <span class="category-count" id="cat1Count">(0)</span>
+            </label>
+            <label class="toggle-btn category-2">
+                <input type="checkbox" id="cat2Toggle" checked onchange="toggleCategory(2)"> Lumiose
+                <span class="category-count" id="cat2Count">(0)</span>
+            </label>
+            <label class="toggle-btn category-3">
+                <input type="checkbox" id="cat3Toggle" checked onchange="toggleCategory(3)"> Hyperspace (DLC)
+                <span class="category-count" id="cat3Count">(0)</span>
+            </label>
+            <button class="btn small" onclick="applyCategoryFilter()">Apply Filter</button>
+            <span class="filtered-count" id="filteredCount"></span>
+        </div>
+    </div>
+
+    <div class="game-layout">
+        <!-- Main Groups Area (Scrollable) -->
+        <div class="groups-main">
+            <div class="groups-grid" id="groupsGrid">
+                <!-- Groups will be dynamically created here -->
+            </div>
+        </div>
+
+        <!-- Right Sidebar - Objects Pool -->
+        <div class="objects-sidebar">
+            <h3>Pokémon to Sort</h3>
+            <div class="objects-container" id="objectsPool">
+                <!-- Objects will be dynamically inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <div class="game-controls">
+        <button class="btn" onclick="initializeGame()">🔄 New Game</button>
+        <button class="btn" onclick="checkSolution()">✅ Check</button>
+        <button class="btn" onclick="resetGame()">↩️ Reset</button>
+        <button class="btn" onclick="shuffleObjects()">🎲 Shuffle</button>
+    </div>
+
+    <div class="message" id="message"></div>
+
+    <!-- Context Menu for Object Properties -->
+    <div id="contextMenu" class="context-menu">
+        <div class="context-menu-header">Object Properties</div>
+        <div class="context-menu-content" id="contextMenuContent"></div>
+    </div>
+</div>
+
+<style>
+    .game-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 15px;
+        font-size: 14px; /* Base smaller font */
+    }
+
+    .game-header h1 {
+        font-size: 1.8rem;
+        margin-bottom: 5px;
+        color: #2c3e50;
+        text-align: center;
+    }
+
+    .game-instructions {
+        font-size: 0.9rem;
+        color: #7f8c8d;
+        margin-bottom: 15px;
+        text-align: center;
+    }
+
+    /* Compact Stats */
+    .game-stats {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 15px;
+    }
+
+    .stat-box {
+        background: white;
+        padding: 8px 15px;
+        border-radius: 6px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        text-align: center;
+        min-width: 70px;
+    }
+
+    .stat-label {
+        font-size: 0.7rem;
+        color: #7f8c8d;
+        text-transform: uppercase;
+    }
+
+    .stat-value {
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: #2c3e50;
+        line-height: 1.2;
+    }
+
+    /* Main Layout - Groups on left, Objects on right */
+    .game-layout {
+        display: flex;
+        gap: 15px;
+        height: calc(100vh - 250px);
+        min-height: 500px;
+    }
+
+    /* Valid drop target */
+    .group-objects.drag-valid {
+        background: rgba(40, 167, 69, 0.1);
+        border: 2px dashed #28a745;
+    }
+
+    /* Invalid drop target */
+    .group-objects.drag-invalid {
+        background: rgba(220, 53, 69, 0.1);
+        border: 2px dashed #dc3545;
+        cursor: not-allowed;
+    }
+
+    /* Drag over effect - base */
+    .group-objects.drag-over {
+        border-radius: 4px;
+    }
+
+    /* Groups Area - Scrollable */
+    .groups-main {
+        flex: 3;
+        overflow-y: auto;
+        padding-right: 10px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 15px;
+    }
+
+    .groups-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); /* Increased from 100px to 150px */
+        gap: 8px; /* Slightly larger gap */
+    }
+
+    /* Compact Group Box */
+    .group {
+        background: white;
+        border-radius: 6px;
+        border: 1px solid #dee2e6;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        transition: all 0.2s ease;
+    }
+
+    /* Group completion states */
+    .group.complete {
+        background: #d4edda;  /* Light green background */
+        border-color: #28a745;  /* Green border */
+        box-shadow: 0 0 0 2px rgba(40, 167, 69, 0.2);
+        transition: all 0.2s ease;
+    }
+
+    .group.complete .group-objects:empty::after {
+        color: #28a745;
+        border-color: #28a745;
+    }
+
+    .group-name {
+        font-weight: bold;
+        color: #2c3e50;
+    }
+
+    .group-count {
+        background: #007bff;
+        color: white;
+        padding: 1px 4px;
+        border-radius: 8px;
+        font-size: 0.6rem;
+    }
+
+    .group-objects {
+        min-height: 60px;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr); /* 3 columns in groups */
+        gap: 2px;
+    }
+
+    /* Right Sidebar - Objects Pool */
+    .objects-sidebar {
+        flex: 1;
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 15px;
+        display: flex;
+        flex-direction: column;
+        min-width: 200px;
+    }
+
+    .objects-sidebar h3 {
+        font-size: 1rem;
+        margin-top: 0;
+        margin-bottom: 10px;
+        color: #2c3e50;
+    }
+
+    .objects-container {
+        overflow-y: auto;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr); /* 5 columns */
+        gap: 4px;
+        padding: 4px;
+    }
+
+    /* Compact Object Card - No Text */
+    .object-card {
+        border-radius: 4px;
+        cursor: move;
+        user-select: none;
+        transition: transform 0.1s, box-shadow 0.1s;
+        aspect-ratio: 1 / 1; /* Square cards */
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 2px;
+        position: relative;
+    }
+
+    /* Alternative switch buttons */
+    .alt-switch-btn {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        padding: 4px 8px;
+        font-size: 0.7rem;
+        cursor: pointer;
+        transition: all 0.1s;
+        text-align: left;
+    }
+
+    .alt-switch-btn:hover {
+        background: #e9ecef;
+        border-color: #adb5bd;
+    }
+
+    .alt-switch-btn:active {
+        background: #dee2e6;
+    }
+
+    /* Object Image */
+    .object-image {
+        width: 40px;
+        height: 40px;
+        object-fit: contain;
+        image-rendering: auto;
+        margin-bottom: 2px;
+    }
+
+    /* Property Indicator Dots */
+    .property-dots {
+        display: flex;
+        gap: 2px;
+        justify-content: center;
+        flex-wrap: wrap;
+        max-width: 100%;
+        padding: 0 2px;
+    }
+
+    .property-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        display: inline-block;
+        border: 1px solid rgba(255,255,255,0.5);
+        cursor: help;
+        flex-shrink: 0;
+    }
+
+    .more-props {
+        font-size: 0.5rem;
+        background: rgba(255,255,255,0.3);
+        padding: 1px 3px;
+        border-radius: 6px;
+        margin-left: 1px;
+        line-height: 1;
+    }
+
+    /* Simple tooltip */
+    .object-card {
+        position: relative;
+    }
+
+    .object-card:hover::after {
+        content: attr(data-object-name);
+        position: absolute;
+        bottom: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0,0,0,0.8);
+        color: white;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 0.6rem;
+        white-space: nowrap;
+        z-index: 100;
+        pointer-events: none;
+        margin-bottom: 4px;
+    }
+
+    /* Alternative indicator */
+    .alt-indicator {
+        position: absolute;
+        top: 2px;
+        right: 2px;
+        font-size: 0.6rem;
+        background: rgba(255,255,255,0.9);
+        color: #2c3e50;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        cursor: help;
+        z-index: 2;
+    }
+
+    .object-card[data-has-alternatives="true"] {
+        cursor: pointer;
+    }
+
+    .object-card[data-has-alternatives="true"]:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    }
+
+    /* Context Menu */
+    .context-menu {
+        display: none;
+        position: fixed;
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        z-index: 1000;
+        min-width: 150px;
+    }
+
+    .context-menu-header {
+        background: #f8f9fa;
+        padding: 8px 12px;
+        border-bottom: 1px solid #ddd;
+        font-weight: bold;
+        font-size: 0.8rem;
+        border-radius: 6px 6px 0 0;
+    }
+
+    .context-menu-content {
+        padding: 8px 12px;
+        font-size: 0.8rem;
+    }
+
+    .context-menu-content ul {
+        margin: 5px 0;
+        padding-left: 20px;
+    }
+
+    /* Game Controls */
+    .game-controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+        margin: 15px 0 10px;
+        justify-content: center;
+    }
+
+    .game-controls .btn {
+        padding: 6px 10px;
+        font-size: 0.8rem;
+        background: #007bff;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        white-space: nowrap;
+    }
+
+    .game-controls .btn:hover {
+        background: #0056b3;
+    }
+
+    .game-controls .btn.small {
+        padding: 4px 8px;
+        font-size: 0.7rem;
+    }
+
+    /* Message Area */
+    .message {
+        padding: 8px;
+        border-radius: 4px;
+        font-size: 0.9rem;
+        text-align: center;
+        min-height: 40px;
+    }
+
+    .message.success { background: #d4edda; color: #155724; }
+    .message.error { background: #f8d7da; color: #721c24; }
+    .message.warning { background: #fff3cd; color: #856404; }
+
+    /* Scrollbar Styling */
+    .groups-main::-webkit-scrollbar,
+    .objects-container::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .groups-main::-webkit-scrollbar-track,
+    .objects-container::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 3px;
+    }
+
+    .groups-main::-webkit-scrollbar-thumb,
+    .objects-container::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 3px;
+    }
+
+    /* ADD to Existing */
+    .category-count {
+        background: rgba(255,255,255,0.3);
+        padding: 2px 6px;
+        border-radius: 10px;
+        font-size: 0.7rem;
+        margin-left: 5px;
+    }
+
+    .object-card .category-values {
+        font-size: 0.6rem;
+        background: rgba(255,255,255,0.2);
+        padding: 1px 4px;
+        border-radius: 3px;
+        margin-top: 1px;
+        display: flex;
+        gap: 4px;
+    }
+
+    .category-value {
+        display: inline-block;
+    }
+
+    .category-value.cat1 { color: #ff8a80; }
+    .category-value.cat2 { color: #82b1ff; }
+    .category-value.cat3 { color: #b9f6ca; }
+
+    .object-name,
+    .category-values,
+    .category-badge {
+        display: none;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .objects-container {
+            grid-template-columns: repeat(3, 1fr); /* 3 columns on mobile */
+        }
+
+        .object-image {
+            width: 28px;
+            height: 28px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .objects-container {
+            grid-template-columns: repeat(2, 1fr); /* 2 columns on very small screens */
+        }
+    }
+</style>
+
+<script>
+    // Game state
+    let allObjects = []; // Will be loaded from JSON
+    let objects = [];
+    let groups = [];
+    let draggedItem = null;
+    let activeCategories = ["KantoDex", "LumioseDex", "LumioseDLC"];
+
+    // Property colors for dots
+    const propertyColors = {
+        'Normal': '#9099a1',
+        'Fire': '#ff9c54',
+        'Water': '#4d90d5',
+        'Electric': '#f3d23b',
+        'Grass': '#63bb5b',
+        'Ice': '#74cec0',
+        'Fighting': '#d3416b',
+        'Poison': '#ab6ac8',
+        'Ground': '#d97746',
+        'Flying': '#8fa8dd',
+        'Psychic': '#f97176',
+        'Bug': '#90c12c',
+        'Rock': '#cbbb8e',
+        'Ghost': '#556cad',
+        'Dragon': '#0a71cc',
+        'Dark': '#5a5366',
+        'Steel': '#5a8ea1',
+        'Fairy': '#ec8fe6',
+    };
+
+    // Wait for DOM to be fully loaded before running any code
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('DOM loaded, initializing game...');
+        loadObjects();
+    });
+
+    // Load objects from JSON
+    async function loadObjects() {
+        try {
+            const url = "{% static 'json/pokedata.json' %}";
+            console.log('Fetching from:', url);
+
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            console.log('Raw data received:', data);
+
+            // Transform the data from your format
+            allObjects = [];
+            let objectCount = 0;
+
+            // First pass: create all objects and build a map for lookups
+            const objectMap = new Map();
+
+            for (const [key, obj] of Object.entries(data)) {
+                objectCount++;
+                console.log(`\n--- Processing object ${objectCount}: ${key} ---`);
+                console.log('Raw object:', obj);
+
+                // Parse category values as numbers (they might be strings in JSON)
+                const cat1 = parseInt(obj.KantoDex) || 0;
+                const cat2 = parseInt(obj.LumioseDex) || 0;
+                const cat3 = parseInt(obj.LumioseDLC) || 0;
+
+                console.log(`Parsed category values:`, { cat1, cat2, cat3 });
+
+                // Determine which categories this object belongs to (value > 0)
+                const categories = [];
+                if (cat1 > 0) categories.push(1);
+                if (cat2 > 0) categories.push(2);
+                if (cat3 > 0) categories.push(3);
+
+                // Combine all properties from x2Eff, x4Eff, properties3
+                const properties = [];
+
+                if (obj.x2Eff && Array.isArray(obj.x2Eff)) {
+                    properties.push(...obj.x2Eff);
+                }
+
+                if (obj.x4Eff && Array.isArray(obj.x4Eff)) {
+                    properties.push(...obj.x4Eff);
+                }
+
+                const newObj = {
+                    id: `obj-${obj.id || key}`,
+                    name: obj.name || key,
+                    key: key,
+                    filename: obj.filename || 'default',
+                    categories: categories,
+                    primaryCategory: categories[0] || 1,
+                    KantoDex: cat1,
+                    LumioseDex: cat2,
+                    LumioseDLC: cat3,
+                    properties: properties,
+                    x2Eff: obj.x2Eff || [],
+                    x4Eff: obj.x4Eff || [],
+                    isBase: parseInt(obj.isbase) === 1, // Convert to boolean
+                    baseSpecies: obj.baseSpecies || null,
+                    alternatives: [], // Will store references to alternative versions
+                    group: null
+                };
+
+                allObjects.push(newObj);
+                objectMap.set(key, newObj);
+                objectMap.set(obj.name, newObj); // Also map by name for baseSpecies lookup
+            }
+
+            // Second pass: link alternatives to their base objects
+            allObjects.forEach(obj => {
+                if (!obj.isBase && obj.baseSpecies) {
+                    // Find the base object by name
+                    const baseObj = allObjects.find(o => o.name === obj.baseSpecies);
+                    if (baseObj) {
+                        if (!baseObj.alternatives) {
+                            baseObj.alternatives = [];
+                        }
+                        baseObj.alternatives.push(obj);
+                        console.log(`Linked alternative ${obj.name} to base ${baseObj.name}`);
+                    } else {
+                        console.warn(`Base object not found for ${obj.name}: ${obj.baseSpecies}`);
+                    }
+                }
+            });
+
+            // Filter out alternatives from the main objects array - they won't be separate cards
+            const baseObjects = allObjects.filter(obj => obj.isBase);
+            console.log(`Loaded ${baseObjects.length} base objects with ${allObjects.length - baseObjects.length} alternatives`);
+
+            // Replace allObjects with just base objects
+            allObjects = baseObjects;
+
+            if (allObjects.length === 0) {
+                showMessage('No base objects were loaded!', 'error');
+                return;
+            }
+
+            console.log(`\n=== SUMMARY ===`);
+            console.log(`Total objects processed: ${objectCount}`);
+            console.log(`Total objects loaded: ${allObjects.length}`);
+
+            // Log category distribution
+            const cat1Count = allObjects.filter(obj => obj.KantoDex > 0).length;
+            const cat2Count = allObjects.filter(obj => obj.LumioseDex > 0).length;
+            const cat3Count = allObjects.filter(obj => obj.LumioseDLC > 0).length;
+
+            console.log(`Objects with Category 1 > 0: ${cat1Count}`);
+            console.log(`Objects with Category 2 > 0: ${cat2Count}`);
+            console.log(`Objects with Category 3 > 0: ${cat3Count}`);
+
+            if (allObjects.length === 0) {
+                showMessage('No objects were loaded! Check console for details.', 'error');
+                return;
+            }
+
+            // Update category counts
+            updateCategoryCounts();
+
+            // Initialize game
+            initializeGame();
+        } catch (error) {
+            console.error('Detailed error:', error);
+            showMessage(`Error loading object data: ${error.message}`, 'error');
+        }
+    }
+
+    function updateCategoryCounts() {
+        const cat1Count = allObjects.filter(obj => obj.KantoDex > 0).length;
+        const cat2Count = allObjects.filter(obj => obj.LumioseDex > 0).length;
+        const cat3Count = allObjects.filter(obj => obj.LumioseDLC > 0).length;
+
+        console.log(`Category counts - Cat1: ${cat1Count}, Cat2: ${cat2Count}, Cat3: ${cat3Count}`);
+
+        document.getElementById('cat1Count').textContent = `(${cat1Count})`;
+        document.getElementById('cat2Count').textContent = `(${cat2Count})`;
+        document.getElementById('cat3Count').textContent = `(${cat3Count})`;
+    }
+
+    function toggleCategory(category) {
+        const checkbox = document.getElementById(`cat${category}Toggle`);
+        console.log(`Toggling category ${category}, checked:`, checkbox.checked);
+
+        if (checkbox.checked) {
+            if (!activeCategories.includes(category)) {
+                activeCategories.push(category);
+                console.log(`Added category ${category}, active categories now:`, activeCategories);
+            }
+        } else {
+            activeCategories = activeCategories.filter(c => c !== category);
+            console.log(`Removed category ${category}, active categories now:`, activeCategories);
+        }
+    }
+
+    function applyCategoryFilter() {
+        console.log('Applying filter with active categories:', activeCategories);
+
+        // Simple explicit check
+        objects = [];
+
+        for (let obj of allObjects) {
+            let include = false;
+
+            // Check each active category
+            if (activeCategories.includes(1) && obj.KantoDex > 0) {
+                include = true;
+                console.log(`Including ${obj.name}: cat1=${obj.KantoDex} > 0`);
+            }
+            if (activeCategories.includes(2) && obj.LumioseDex > 0) {
+                include = true;
+                console.log(`Including ${obj.name}: cat2=${obj.LumioseDex} > 0`);
+            }
+            if (activeCategories.includes(3) && obj.LumioseDLC > 0) {
+                include = true;
+                console.log(`Including ${obj.name}: cat3=${obj.LumioseDLC} > 0`);
+            }
+
+            if (include) {
+                objects.push({...obj, group: null});
+            } else {
+                console.log(`Excluding ${obj.name}: no matching categories`);
+            }
+        }
+
+        console.log(`Filtered objects count: ${objects.length}`);
+
+        if (objects.length === 0) {
+            showMessage('No objects match selected categories!', 'warning');
+            return;
+        }
+
+        // Calculate number of groups needed (3 objects per group)
+        const groupCount = Math.ceil(objects.length / 3);
+
+        // Create groups
+        groups = [];
+        for (let i = 0; i < groupCount; i++) {
+            groups.push({
+                id: i,
+                name: `Group ${String.fromCharCode(65 + i)}`,
+                objects: []
+            });
+        }
+
+        // Shuffle objects
+        shuffleArray(objects);
+
+        // Update UI
+        document.getElementById('objectsCount').textContent = objects.length;
+        document.getElementById('groupsCount').textContent = groups.length;
+        document.getElementById('filteredCount').textContent =
+            `Showing ${objects.length} objects`;
+
+        renderGame();
+
+        const categoryNames = activeCategories.map(c => `Cat ${c}`).join(', ');
+        showMessage(`Loaded ${objects.length} objects from ${categoryNames}`, 'warning');
+    }
+
+    function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+    }
+
+    function initializeGame() {
+        // Ensure all categories are checked
+        document.getElementById('cat1Toggle').checked = true;
+        document.getElementById('cat2Toggle').checked = true;
+        document.getElementById('cat3Toggle').checked = true;
+        activeCategories = [1, 2, 3];
+
+        applyCategoryFilter();
+    }
+
+    function renderGame() {
+        renderObjectsPool();
+        renderGroups();
+        updateStats();
+    }
+
+    function renderObjectsPool() {
+        const poolContainer = document.getElementById('objectsPool');
+        poolContainer.innerHTML = '';
+
+        objects.filter(obj => obj.group === null).forEach(obj => {
+            const objectCard = createObjectCard(obj);
+            poolContainer.appendChild(createObjectCard(obj));
+        });
+
+        // Make the pool container a drop target
+        poolContainer.addEventListener('dragover', handleDragOver);
+        poolContainer.addEventListener('drop', handlePoolDrop);
+        poolContainer.addEventListener('dragenter', handleDragEnter);
+        poolContainer.addEventListener('dragleave', handleDragLeave);
+    }
+
+    function handlePoolDrop(e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const poolContainer = document.getElementById('objectsPool');
+        poolContainer.classList.remove('drag-over', 'drag-valid', 'drag-invalid');
+
+        const objectId = e.dataTransfer.getData('text/plain');
+        const object = objects.find(obj => obj.id === objectId);
+
+        if (!object) return;
+
+        // Move object back to pool
+        object.group = null;
+        renderGame();
+        updateStats();
+        showMessage('Object returned to pool', 'warning');
+    }
+
+    function handlePoolDragEnter(e) {
+        e.preventDefault();
+        const poolContainer = document.getElementById('objectsPool');
+        poolContainer.classList.add('drag-valid'); // Pool is always valid
+    }
+
+    function handlePoolDragLeave(e) {
+        const poolContainer = document.getElementById('objectsPool');
+        poolContainer.classList.remove('drag-over', 'drag-valid', 'drag-invalid');
+    }
+
+    function createObjectCard(obj) {
+        const card = document.createElement('div');
+
+        // Determine card class based on categories
+        let categoryClass = 'category-multi';
+        if (obj.categories.length === 1) {
+            categoryClass = `category-${obj.categories[0]}`;
+        }
+
+        card.className = `object-card ${categoryClass}`;
+        card.setAttribute('draggable', 'true');
+        card.setAttribute('data-object-id', obj.id);
+        card.setAttribute('data-group-id', obj.group !== null ? obj.group : 'pool');
+
+        // Store full object data for tooltip/context menu
+        card.setAttribute('data-object-name', obj.name);
+        card.setAttribute('data-object-cat1', obj.KantoDex);
+        card.setAttribute('data-object-cat2', obj.LumioseDex);
+        card.setAttribute('data-object-cat3', obj.LumioseDLC);
+
+        // Add attribute if object has alternatives
+        if (obj.alternatives && obj.alternatives.length > 0) {
+            card.setAttribute('data-has-alternatives', 'true');
+        }
+
+        // Create image path - using Django's static tag
+        // Since we're in JavaScript, we need to construct the URL
+        const imageUrl = `/static/images/pokemonicons/${obj.filename}.png`;
+
+        // Create property dots (limit to first 6 to keep card clean)
+        const displayProperties = obj.properties.slice(0, 8);
+        const propertyDots = displayProperties.map(prop =>
+            `<span class="property-dot" style="background: ${propertyColors[prop] || '#95a5a6'}"
+                   title="${prop}"></span>`
+        ).join('');
+
+        card.innerHTML = `
+            <img src="${imageUrl}"
+                 alt="${obj.name}"
+                 class="object-image"
+                 onerror="this.src='/static/images/icons/default.png'; this.onerror=null;"
+                 loading="lazy"
+                 title="${obj.name}">
+            <div class="property-dots">
+                ${propertyDots}
+            </div>
+        `;
+
+        // Add alternative indicator if needed
+        const altIndicator = obj.alternatives && obj.alternatives.length > 0 ?
+            `<span class="alt-indicator" title="${obj.alternatives.length} alternative version(s)">🔄</span>` : '';
+
+        const baseIndicator = obj.!isbase  ?
+            `<span class="base-indicator" title=alternative version(s)">🔄</span>` : '';
+
+        card.innerHTML = `
+            <img src="${imageUrl}"
+                 alt="${obj.name}"
+                 class="object-image"
+                 loading="lazy"
+            <div class="property-dots">
+                ${propertyDots}
+            </div>
+            ${altIndicator}
+        `;
+
+        // Right-click to show properties (now includes alternatives)
+        card.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            showContextMenu(e, obj);
+        });
+
+        // Optional: Show tooltip on hover (simpler than context menu)
+        card.addEventListener('mouseenter', (e) => {
+            // Could show a simple tooltip if desired
+        });
+
+        // Drag events
+        card.addEventListener('dragstart', handleDragStart);
+        card.addEventListener('dragend', handleDragEnd);
+
+        return card;
+    }
+
+function renderGroups() {
+    const groupsGrid = document.getElementById('groupsGrid');
+    groupsGrid.innerHTML = '';
+
+    groups.forEach(group => {
+        const groupObjects = objects.filter(obj => obj.group === group.id);
+        const objectCount = groupObjects.length;
+
+        const groupDiv = document.createElement('div');
+        groupDiv.className = 'group';
+
+        // Add completion class if group has 3 objects
+        if (objectCount === 3) {
+            groupDiv.classList.add('complete');
+        } else if (objectCount > 3) {
+            groupDiv.classList.add('overfull');
+        }
+
+        groupDiv.setAttribute('data-group-id', group.id);
+
+        // Create objects container
+        const objectsDiv = document.createElement('div');
+        objectsDiv.className = 'group-objects';
+        objectsDiv.setAttribute('data-group-id', group.id);
+
+        // Add each object as a proper DOM element with event listeners
+        groupObjects.forEach(obj => {
+            const objectCard = createObjectCard(obj);
+            objectsDiv.appendChild(objectCard);
+        });
+
+        // Add drop zone event listeners to the objects container
+        objectsDiv.addEventListener('dragover', handleDragOver);
+        objectsDiv.addEventListener('drop', handleDrop);
+        objectsDiv.addEventListener('dragenter', handleDragEnter);
+        objectsDiv.addEventListener('dragleave', handleDragLeave);
+
+        // Assemble the group
+        groupDiv.appendChild(objectsDiv);
+
+        groupsGrid.appendChild(groupDiv);
+    });
+}
+
+    function showContextMenu(e, obj) {
+        e.preventDefault();
+
+        const menu = document.getElementById('contextMenu');
+        const content = document.getElementById('contextMenuContent');
+
+        // Group properties by their source lists
+        const allProps = [];
+        if (obj.x2Eff && obj.x2Eff.length) {
+            allProps.push(...obj.x2Eff.map(p => ({ prop: p, source: 1 })));
+        }
+        if (obj.x4Eff && obj.x4Eff.length) {
+            allProps.push(...obj.x4Eff.map(p => ({ prop: p, source: 2 })));
+        }
+
+        const propertyItems = allProps.map(item =>
+            `<li style="color: ${propertyColors[item.prop] || '#333'}">
+                ${item.prop} <span style="font-size:0.7rem; opacity:0.7;">(src:${item.source})</span>
+            </li>`
+        ).join('');
+
+        // Build alternatives section if they exist
+        let alternativesHtml = '';
+        if (obj.alternatives && obj.alternatives.length > 0) {
+            const altButtons = obj.alternatives.map((alt, index) =>
+                `<button class="alt-switch-btn" data-alt-index="${index}" data-base-id="${obj.id}">
+                    Switch to ${alt.name}
+                </button>`
+            ).join('');
+
+            alternativesHtml = `
+                <div style="margin-top: 10px; border-top: 1px solid #eee; padding-top: 8px;">
+                    <strong>Alternatives (${obj.alternatives.length}):</strong>
+                    <div style="display: flex; flex-direction: column; gap: 4px; margin-top: 6px;">
+                        ${altButtons}
+                    </div>
+                </div>
+            `;
+        }
+
+        content.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                <img src="/static/images/pokemonicons/${obj.filename}.png"
+                     alt="${obj.name}"
+                     style="width: 48px; height: 48px; object-fit: contain;"
+                     onerror="this.src='/static/images/pokemonicons/default.png'">
+                <div>
+                    <strong>${obj.name}</strong><br>
+                    <span style="font-size:0.8rem;">ID: ${obj.key}</span>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 8px;">
+                <strong>Category Values:</strong><br>
+                <span style="color: #ef5350;">Cat1: ${obj.category1}</span> |
+                <span style="color: #42a5f5;">Cat2: ${obj.category2}</span> |
+                <span style="color: #66bb6a;">Cat3: ${obj.category3}</span>
+            </div>
+
+            <div>
+                <strong>Properties (${obj.properties.length} total):</strong>
+                <ul style="columns: 2; margin-top: 5px;">
+                    ${propertyItems}
+                </ul>
+            </div>
+        `;
+
+        menu.style.display = 'block';
+        menu.style.left = e.pageX + 'px';
+        menu.style.top = e.pageY + 'px';
+
+        // Add event listeners to alternative buttons
+        if (obj.alternatives && obj.alternatives.length > 0) {
+            const altButtons = menu.querySelectorAll('.alt-switch-btn');
+            altButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const altIndex = parseInt(btn.dataset.altIndex);
+                    const baseId = btn.dataset.baseId;
+                    switchToAlternative(baseId, altIndex);
+                    menu.style.display = 'none';
+                });
+            });
+        }
+
+        // Hide menu when clicking elsewhere
+        setTimeout(() => {
+            document.addEventListener('click', function hideMenu() {
+                menu.style.display = 'none';
+                document.removeEventListener('click', hideMenu);
+            });
+        }, 100);
+    }
+
+    function switchToAlternative(baseId, altIndex) {
+        // Find the base object
+        const baseObj = allObjects.find(obj => obj.id === baseId);
+        if (!baseObj || !baseObj.alternatives || !baseObj.alternatives[altIndex]) return;
+
+        const altObj = baseObj.alternatives[altIndex];
+
+        // Find the actual game object (might be in objects array)
+        const gameObj = objects.find(obj => obj.id === baseId);
+        if (!gameObj) return;
+
+        // Remember the group this object is in
+        const currentGroup = gameObj.group;
+
+        // Create a new object that's a copy of the alternative but with base's ID and position
+        const switchedObj = {
+            ...altObj,
+            id: gameObj.id, // Keep the same ID
+            name: altObj.name,
+            filename: altObj.filename || gameObj.filename,
+            categories: altObj.categories,
+            primaryCategory: altObj.primaryCategory,
+            category1: altObj.category1,
+            category2: altObj.category2,
+            category3: altObj.category3,
+            properties: altObj.properties,
+            properties1: altObj.properties1,
+            properties2: altObj.properties2,
+            isBase: false,
+            baseSpecies: baseObj.name,
+            group: currentGroup // Stay in the same group
+        };
+
+        // Replace the object in the objects array
+        const index = objects.findIndex(obj => obj.id === baseId);
+        if (index !== -1) {
+            objects[index] = switchedObj;
+        }
+
+        // Re-render
+        renderGame();
+        showMessage(`Switched to ${altObj.name}`, 'warning');
+    }
+
+    function handleDragStart(e) {
+        draggedItem = this;
+        this.classList.add('dragging');
+        e.dataTransfer.setData('text/plain', this.dataset.objectId);
+        e.dataTransfer.setData('source-group', this.dataset.groupId); // Store source group
+        e.dataTransfer.effectAllowed = 'move';
+    }
+
+    function handleDragEnd(e) {
+        this.classList.remove('dragging');
+        document.querySelectorAll('.group-objects').forEach(el => {
+            el.classList.remove('drag-over');
+        });
+    }
+
+function handleDragOver(e) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+
+    // Don't show validation classes during drag over - we'll show on enter/leave
+    }
+
+    function handleDragEnter(e) {
+        e.preventDefault();
+
+        const targetGroupId = parseInt(this.dataset.groupId);
+        const objectId = e.dataTransfer.getData('text/plain');
+        const object = objects.find(obj => obj.id === objectId);
+
+        if (!object) return;
+
+        // Check if target group already has 3 objects
+        const targetGroupObjects = objects.filter(obj => obj.group === targetGroupId);
+        if (targetGroupObjects.length >= 3) {
+            this.classList.add('drag-invalid');
+            this.classList.remove('drag-valid');
+            return;
+        }
+
+        // Check if object can be placed here
+        const canPlace = canPlaceInGroup(object, targetGroupId);
+
+        if (canPlace) {
+            this.classList.add('drag-valid');
+            this.classList.remove('drag-invalid');
+        } else {
+            this.classList.add('drag-invalid');
+            this.classList.remove('drag-valid');
+        }
+    }
+
+    function handleDragLeave(e) {
+        this.classList.remove('drag-over');
+        this.classList.remove('drag-valid');
+        this.classList.remove('drag-invalid');
+    }
+
+    function handleDrop(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        this.classList.remove('drag-over', 'drag-valid', 'drag-invalid');
+
+        const objectId = e.dataTransfer.getData('text/plain');
+        const sourceGroupId = e.dataTransfer.getData('source-group');
+        const targetGroupId = parseInt(this.dataset.groupId);
+
+        const object = objects.find(obj => obj.id === objectId);
+
+        if (!object) return;
+
+        // Check if target group already has 3 objects
+        const targetGroupObjects = objects.filter(obj => obj.group === targetGroupId);
+        if (targetGroupObjects.length >= 3) {
+            showMessage('Groups can only have 3 objects!', 'warning');
+            return;
+        }
+
+        // If moving from one group to another, temporarily remove from source for conflict check
+        const originalGroup = object.group;
+        object.group = null; // Temporarily remove
+
+        // Check if object can be placed in target group (no shared properties)
+        const canPlace = canPlaceInGroup(object, targetGroupId);
+
+        if (!canPlace) {
+            // Restore original group if placement not allowed
+            object.group = originalGroup;
+            showMessage('Object shares properties with others in this group!', 'error');
+            renderGame(); // Re-render to ensure correct display
+            return;
+        }
+
+        // Place the object in target group
+        object.group = targetGroupId;
+
+        // If source was a group (not pool), we don't need to do anything else
+        // The object is now in the new group
+
+        renderGame();
+        updateStats();
+
+        // Check if all objects are placed
+        const placedCount = objects.filter(obj => obj.group !== null).length;
+        if (placedCount === objects.length) {
+            showMessage('All objects placed! Click "Check" to verify solution.', 'warning');
+        } else {
+            showMessage(`Object moved to ${String.fromCharCode(65 + targetGroupId)}`, 'warning');
+        }
+    }
+
+    function handlePoolDrop(e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const poolContainer = document.getElementById('objectsPool');
+        poolContainer.classList.remove('drag-over', 'drag-valid', 'drag-invalid');
+
+        const objectId = e.dataTransfer.getData('text/plain');
+        const object = objects.find(obj => obj.id === objectId);
+
+        if (!object) return;
+
+        // Move object back to pool
+        object.group = null;
+        renderGame();
+        updateStats();
+        showMessage('Object returned to pool', 'warning');
+    }
+
+    function canPlaceInGroup(object, targetGroupId) {
+        const groupObjects = objects.filter(obj =>
+            obj.group === targetGroupId && obj.id !== object.id // Exclude the object itself
+        );
+
+        for (let groupObj of groupObjects) {
+            for (let prop of object.properties) {
+                if (groupObj.properties.includes(prop)) {
+                    console.log(`Conflict: ${object.name} shares '${prop}' with ${groupObj.name}`);
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    function updateStats() {
+        const placedCount = objects.filter(obj => obj.group !== null).length;
+        document.getElementById('placedCount').textContent = placedCount;
+    }
+
+    function checkSolution() {
+        const unplacedCount = objects.filter(obj => obj.group === null).length;
+
+        if (unplacedCount > 0) {
+            showMessage(`Place ${unplacedCount} more object(s)!`, 'warning');
+            return;
+        }
+
+        // Check each group has exactly 3 objects
+        for (let group of groups) {
+            const groupObjects = objects.filter(obj => obj.group === group.id);
+            if (groupObjects.length !== 3) {
+                showMessage(`Group ${group.name} doesn't have exactly 3 objects!`, 'error');
+                return;
+            }
+        }
+
+        // Check all groups for property conflicts
+        for (let group of groups) {
+            const groupObjects = objects.filter(obj => obj.group === group.id);
+
+            for (let i = 0; i < groupObjects.length; i++) {
+                for (let j = i + 1; j < groupObjects.length; j++) {
+                    for (let prop of groupObjects[i].properties) {
+                        if (groupObjects[j].properties.includes(prop)) {
+                            showMessage(`Conflict in ${group.name}: "${prop}" appears in multiple objects!`, 'error');
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+
+        showMessage('🎉 Perfect! All objects correctly sorted!', 'success');
+    }
+
+    function resetGame() {
+        objects.forEach(obj => obj.group = null);
+        renderGame();
+        showMessage('Game reset', 'warning');
+    }
+
+    function shuffleObjects() {
+        // Shuffle unplaced objects
+        const unplacedObjects = objects.filter(obj => obj.group === null);
+        shuffleArray(unplacedObjects);
+
+        // Reorder objects array
+        const placedObjects = objects.filter(obj => obj.group !== null);
+        objects = [...placedObjects, ...unplacedObjects];
+
+        renderObjectsPool();
+        showMessage('Objects shuffled', 'warning');
+    }
+
+    function showMessage(text, type) {
+        const messageDiv = document.getElementById('message');
+        messageDiv.innerHTML = text;
+        messageDiv.className = `message ${type}`;
+    }
+
+    // Load objects when page loads
+    window.onload = loadObjects;
+</script>
+{% endblock %}
