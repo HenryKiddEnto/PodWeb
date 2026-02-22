@@ -3,14 +3,22 @@ from embed_video.admin import AdminVideoMixin
 from .models import HomepageVideo, Project, BlogPost, GalleryPhoto  # Import all your models
 
 # Use AdminVideoMixin in a single registration
+@admin.register(HomepageVideo)
 class HomepageVideoAdmin(AdminVideoMixin, admin.ModelAdmin):
     list_display = ('title', 'is_active', 'updated_at')
     list_filter = ('is_active',)
     search_fields = ('title', 'description')
-    readonly_fields = ('updated_at',)
+    readonly_fields = ('updated_at',)  # Remove 'youtube_id' from here
 
-# Register with the class directly
-admin.site.register(HomepageVideo, HomepageVideoAdmin)
+    # If you want to organize fields in sections
+    fieldsets = (
+        ('Video Information', {
+            'fields': ('title', 'video', 'description')
+        }),
+        ('Settings', {
+            'fields': ('is_active', 'autoplay', 'mute', 'updated_at')
+        }),
+    )
 
 # Your other models can stay the same
 @admin.register(Project)
