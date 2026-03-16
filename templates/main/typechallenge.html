@@ -12,118 +12,40 @@
         <div class="category-toggles">
             <span class="category-label">Regions:</span>
 
-            <div class="category-grid">
-                <div class="category-item">
-                    <span class="category-name category-1-text">Kanto</span>
-                    <label class="toggle-btn category-1">
-                        <input type="checkbox" id="cat1Toggle" checked onchange="toggleCategory(1)">
-                        <span class="checkmark"></span>
-                    </label>
-                </div>
-                <div class="category-item">
-                    <span class="category-name category-2-text">Johto</span>
-                    <label class="toggle-btn category-2">
-                        <input type="checkbox" id="cat2Toggle" checked onchange="toggleCategory(2)">
-                        <span class="checkmark"></span>
-                    </label>
-                </div>
-                <div class="category-item">
-                    <span class="category-name category-3-text">Hoenn</span>
-                    <label class="toggle-btn category-3">
-                        <input type="checkbox" id="cat3Toggle" checked onchange="toggleCategory(3)">
-                        <span class="checkmark"></span>
-                    </label>
-                </div>
-                <div class="category-item">
-                    <span class="category-name category-4-text">Sinnoh</span>
-                    <label class="toggle-btn category-4">
-                        <input type="checkbox" id="cat4Toggle" checked onchange="toggleCategory(4)">
-                        <span class="checkmark"></span>
-                    </label>
-                </div>
-                <div class="category-item">
-                    <span class="category-name category-5-text">Unova</span>
-                    <label class="toggle-btn category-5">
-                        <input type="checkbox" id="cat5Toggle" checked onchange="toggleCategory(5)">
-                        <span class="checkmark"></span>
-                    </label>
-                </div>
-                <div class="category-item">
-                    <span class="category-name category-6-text">Kalos</span>
-                    <label class="toggle-btn category-6">
-                        <input type="checkbox" id="cat6Toggle" checked onchange="toggleCategory(6)">
-                        <span class="checkmark"></span>
-                    </label>
-                </div>
-                <div class="category-item">
-                    <span class="category-name category-7-text">Alola</span>
-                    <label class="toggle-btn category-7">
-                        <input type="checkbox" id="cat7Toggle" checked onchange="toggleCategory(7)">
-                        <span class="checkmark"></span>
-                    </label>
-                </div>
-                <div class="category-item">
-                    <span class="category-name category-8-text">Alola ★</span>
-                    <label class="toggle-btn category-8">
-                        <input type="checkbox" id="cat8Toggle" checked onchange="toggleCategory(8)">
-                        <span class="checkmark"></span>
-                    </label>
-                </div>
-                <div class="category-item">
-                    <span class="category-name category-9-text">Galar</span>
-                    <label class="toggle-btn category-9">
-                        <input type="checkbox" id="cat9Toggle" checked onchange="toggleCategory(9)">
-                        <span class="checkmark"></span>
-                    </label>
-                </div>
-                <div class="category-item">
-                    <span class="category-name category-10-text">Galar ★</span>
-                    <label class="toggle-btn category-10">
-                        <input type="checkbox" id="cat10Toggle" checked onchange="toggleCategory(10)">
-                        <span class="checkmark"></span>
-                    </label>
-                </div>
-                <div class="category-item">
-                    <span class="category-name category-11-text">Hisui</span>
-                    <label class="toggle-btn category-11">
-                        <input type="checkbox" id="cat11Toggle" checked onchange="toggleCategory(11)">
-                        <span class="checkmark"></span>
-                    </label>
-                </div>
-                <div class="category-item">
-                    <span class="category-name category-12-text">Paldea</span>
-                    <label class="toggle-btn category-12">
-                        <input type="checkbox" id="cat12Toggle" checked onchange="toggleCategory(12)">
-                        <span class="checkmark"></span>
-                    </label>
-                </div>
-                <div class="category-item">
-                    <span class="category-name category-13-text">Paldea ★</span>
-                    <label class="toggle-btn category-13">
-                        <input type="checkbox" id="cat13Toggle" checked onchange="toggleCategory(13)">
-                        <span class="checkmark"></span>
-                    </label>
-                </div>
-                <div class="category-item">
-                    <span class="category-name category-14-text">Lumiose</span>
-                    <label class="toggle-btn category-14">
-                        <input type="checkbox" id="cat14Toggle" checked onchange="toggleCategory(14)">
-                        <span class="checkmark"></span>
-                    </label>
-                </div>
-                <div class="category-item">
-                    <span class="category-name category-15-text">Lumiose ★</span>
-                    <label class="toggle-btn category-15">
-                        <input type="checkbox" id="cat15Toggle" checked onchange="toggleCategory(15)">
-                        <span class="checkmark"></span>
-                    </label>
-                </div>
+            <div class="category-grid" id="categoryGrid">
+                <!-- Categories will be inserted here by JavaScript -->
             </div>
         <div class="category-actions">
             <button class="btn small" onclick="applyCategoryFilter()">Apply Filter</button>
             <button class="btn small" onclick="toggleAllCategories(true)">✔</button>
             <button class="btn small" onclick="toggleAllCategories(false)">✘</button>
             <span class="filtered-count" id="filteredCount"></span>
+            <div class="simple-toggle">
+                <span class="simple-label">Full Regional Dex</span>
+                <label class="switch">
+                    <input type="checkbox" id="DexToggle" onchange="toggleDex()">
+                    <span class="slider round"></span>
+                </label>
+            </div>
+            <div class="simple-toggle">
+                <span class="simple-label">DLC Pokemon</span>
+                <label class="switch">
+                    <input type="checkbox" id="DLCToggle" onchange="toggleDLC()">
+                    <span class="slider round"></span>
+                </label>
+            </div>
+            <div class="simple-toggle">Pre-Evolutions</span>
+                <label class="switch">
+                    <input type="checkbox" id="PreEvoToggle" onchange="togglePreEvo()">
+                    <span class="slider round"></span>
+                </label>
+            </div>
+            <div class="simple-toggle">Additional Formes</span>
+                <label class="switch">
+                    <input type="checkbox" id="FormeToggle" onchange="toggleForme()">
+                    <span class="slider round"></span>
+                </label>
+            </div>
         </div>
     </div>
 
@@ -338,7 +260,36 @@
         transition: all 0.2s ease;
     }
 
+
     .group.complete .group-objects:empty::after {
+        color: #28a745;
+        border-color: #28a745;
+    }
+
+    .group.highlight {
+        background: #D5EEFF;  /* Light orange background */
+        border-color: #0099FF;  /* Orange border */
+        box-shadow: 0 0 0 2px rgba(0, 153, 255, 0.2);
+        transition: all 0.2s ease;
+        padding: 0px;
+        margin-bottom: 0px;
+    }
+
+    .group.highlight .group-objects:empty::after {
+        color: #28a745;
+        border-color: #28a745;
+    }
+
+    .group.highlight2 {
+        background: #FBEAEC;  /* Light orange background */
+        border-color: #DC3545;  /* Orange border */
+        box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.2);
+        transition: all 0.2s ease;
+        padding: 0px;
+        margin-bottom: 0px;
+    }
+
+    .group.highlight2 .group-objects:empty::after {
         color: #28a745;
         border-color: #28a745;
     }
@@ -882,6 +833,65 @@
         font-size: 0.7rem;
     }
 
+    /* Simple mode toggle switch */
+    .simple-toggle {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-left: 10px;
+    }
+
+    .switch {
+        position: relative;
+        display: inline-block;
+        width: 50px;
+        height: 24px;
+    }
+
+    .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        transition: .3s;
+        border-radius: 24px;
+    }
+
+    .slider:before {
+        position: absolute;
+        content: "";
+        height: 18px;
+        width: 18px;
+        left: 3px;
+        bottom: 3px;
+        background-color: white;
+        transition: .3s;
+        border-radius: 50%;
+    }
+
+    input:checked + .slider {
+        background-color: #28a745;
+    }
+
+    input:checked + .slider:before {
+        transform: translateX(26px);
+    }
+
+    .simple-label {
+        font-size: 0.85rem;
+        color: #2c3e50;
+        font-weight: 500;
+    }
+
     /* Modal styles */
     .modal {
         display: none;
@@ -1300,14 +1310,10 @@
     .category-5 .checkmark { background-color: #D9D9D9; }
     .category-6 .checkmark { background-color: #F8D1FB; }
     .category-7 .checkmark { background-color: #FBF8BD; }
-    .category-8 .checkmark { background-color: #FBF8BD; }
-    .category-9 .checkmark { background-color: #f8bbd0; }
-    .category-10 .checkmark { background-color: #f8bbd0; }
-    .category-11 .checkmark { background-color: #D5CADC; }
-    .category-12 .checkmark { background-color: #FFD1A3; }
-    .category-13 .checkmark { background-color: #FFD1A3; }
-    .category-14 .checkmark { background-color: #F8D1FB; }
-    .category-15 .checkmark { background-color: #F8D1FB; }
+    .category-8 .checkmark { background-color: #f8bbd0; }
+    .category-9 .checkmark { background-color: #D5CADC; }
+    .category-10 .checkmark { background-color: #FFD1A3; }
+    .category-11 .checkmark { background-color: #F8D1FB; }
 
     /* Hover state */
     .toggle-btn:hover .checkmark {
@@ -1343,14 +1349,10 @@
     .category-5 input:checked ~ .checkmark { background-color: #696969; }
     .category-6 input:checked ~ .checkmark { background-color: #ED8CF4; }
     .category-7 input:checked ~ .checkmark { background-color: #F5ED51; }
-    .category-8 input:checked ~ .checkmark { background-color: #F5ED51; }
-    .category-9 input:checked ~ .checkmark { background-color: #ec407a; }
-    .category-10 input:checked ~ .checkmark { background-color: #ec407a; }
-    .category-11 input:checked ~ .checkmark { background-color: #AD97BB; }
-    .category-12 input:checked ~ .checkmark { background-color: #FF9F3F; }
-    .category-13 input:checked ~ .checkmark { background-color: #FF9F3F; }
-    .category-14 input:checked ~ .checkmark { background-color: #ED8CF4; }
-    .category-15 input:checked ~ .checkmark { background-color: #ED8CF4; }
+    .category-8 input:checked ~ .checkmark { background-color: #ec407a; }
+    .category-9 input:checked ~ .checkmark { background-color: #AD97BB; }
+    .category-10 input:checked ~ .checkmark { background-color: #FF9F3F; }
+    .category-11 input:checked ~ .checkmark { background-color: #ED8CF4; }
 
     /* Category actions row */
     .category-actions {
@@ -1372,6 +1374,7 @@
         border: none;
         border-radius: 4px;
         cursor: pointer;
+        margin-top: 0;
         transition: background-color 0.2s;
     }
 
@@ -1418,10 +1421,30 @@
     let objects = [];
     let groups = [];
     let draggedItem = null;
-    let activeCategories =  [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
     let currentSort = 'Number';
+    let highlightedGroups = new Set();
+    let highlightedGroups2 = new Set();    // Property colors for dots
+    let includeDex = document.getElementById('DexToggle').checked;
+    let includeDLC = document.getElementById('DLCToggle').checked;
+    let includePrevo = document.getElementById('PreEvoToggle').checked;
+    let includeForme = document.getElementById('FormeToggle').checked;
 
-    // Property colors for dots
+    const CATEGORIES = [
+        { id: 1, name: 'Kanto', source: 'KantoDex'},
+        { id: 2, name: 'Johto', source: 'JohtoDex'},
+        { id: 3, name: 'Hoenn', source: 'HoennDex'},
+        { id: 4, name: 'Sinnoh', source: 'SinnohDex'},
+        { id: 5, name: 'Unova', source: 'UnovaDex'},
+        { id: 6, name: 'Kalos', source: 'KalosDex'},
+        { id: 7, name: 'Alola', source: 'AlolaDex'},
+        { id: 8, name: 'Galar', source: 'GalarDex'},
+        { id: 9, name: 'Hisui', source: 'HisuiDex'},
+        { id: 10, name: 'Paldea', source: 'PaldeaDex'},
+        { id: 11, name: 'Lumiose', source: 'LumioseDex'}
+    ];
+
+    let activeCategories = CATEGORIES.map(c => c.id);
+
     const propertyColors = {
         'Normal': '#9099a1',
         'Fire': '#ff9c54',
@@ -1466,54 +1489,26 @@
             // Transform the data from your format
             allObjects = [];
             let objectCount = 0;
+            const entries = Object.entries(data);
+            const totalObjects = entries.length;
 
-            // First pass: create all objects and build a map for lookups
-            const objectMap = new Map();
-
-            for (const [key, obj] of Object.entries(data)) {
+            for (let i = 0; i < entries.length; i++) {
+                const [key, obj] = entries[i];
                 objectCount++;
-                console.log(`\n--- Processing object ${objectCount}: ${key} ---`);
-                console.log('Raw object:', obj);
 
-                // Parse category values as numbers (they might be strings in JSON)
-                const cat1 = parseInt(obj.KantoDex) || 0;
-                const cat2 = parseInt(obj.JohtoDex) || 0;
-                const cat3 = parseInt(obj.HoennDex) || 0;
-                const cat4 = parseInt(obj.SinnohDex) || 0;
-                const cat5 = parseInt(obj.UnovaDex) || 0;
-                const cat6 = parseInt(obj.KalosDex) || 0;
-                const cat7 = parseInt(obj.AlolaDex) || 0;
-                const cat8 = parseInt(obj.AlolaDLC) || 0;
-                const cat9 = parseInt(obj.GalarDex) || 0;
-                const cat10 = parseInt(obj.GalarDLC) || 0;
-                const cat11 = parseInt(obj.HisuiDex) || 0;
-                const cat12 = parseInt(obj.PaldeaDex) || 0;
-                const cat13 = parseInt(obj.PaldeaDLC) || 0;
-                const cat14 = parseInt(obj.LumioseDex) || 0;
-                const cat15 = parseInt(obj.LumioseDLC) || 0;
-
-                // Parse exclude and override
-                const exclude = parseInt(obj.evonum) || 0;
-                const override = obj.latergenevo || null;
-                const number = parseInt(obj.num) || 0;
+                // Dynamically extract category values based on CATEGORIES array
+                const categoryValues = {};
+                CATEGORIES.forEach(cat => {
+                    categoryValues[`category${cat.id}`] = obj[cat.source] || 0;
+                });
 
                 // Determine which categories this object belongs to (value > 0)
                 const categories = [];
-                if (cat1 > 0) categories.push(1);
-                if (cat2 > 0) categories.push(2);
-                if (cat3 > 0) categories.push(3);
-                if (cat4 > 0) categories.push(4);
-                if (cat5 > 0) categories.push(5);
-                if (cat6 > 0) categories.push(6);
-                if (cat7 > 0) categories.push(7);
-                if (cat8 > 0) categories.push(8);
-                if (cat9 > 0) categories.push(9);
-                if (cat10 > 0) categories.push(10);
-                if (cat11 > 0) categories.push(11);
-                if (cat12 > 0) categories.push(12);
-                if (cat13 > 0) categories.push(13);
-                if (cat14 > 0) categories.push(14);
-                if (cat15 > 0) categories.push(15);
+                CATEGORIES.forEach(cat => {
+                    if (categoryValues[`category${cat.id}`] != 0) {
+                        categories.push(cat.id);
+                    }
+                });
 
                 // Combine all properties from x2Eff, x4Eff, properties3
                 const properties = [];
@@ -1531,45 +1526,61 @@
                     name: obj.name || key,
                     key: key,
                     filename: obj.filename || 'default',
+                    number: parseInt(obj.num) || 0,
                     categories: categories,
                     primaryCategory: categories[0] || 1,
-                    KantoDex: cat1,
-                    JohtoDex: cat2,
-                    HoennDex: cat3,
-                    SinnohDex: cat4,
-                    UnovaDex: cat5,
-                    KalosDex: cat6,
-                    AlolaDex: cat7,
-                    AlolaDLC: cat8,
-                    GalarDex: cat9,
-                    GalarDLC: cat10,
-                    HisuiDex: cat11,
-                    PaldeaDex: cat12,
-                    PaldeaDLC: cat13,
-                    LumioseDex: cat14,
-                    LumioseDLC: cat15,
                     properties: properties,
                     x2Eff: obj.x2Eff || [],
                     x4Eff: obj.x4Eff || [],
                     isBase: parseInt(obj.isbase) === 1, // Convert to boolean
                     baseSpecies: obj.baseSpecies || null,
-                    exclude: exclude > 0, // Convert to boolean
-                    excludeValue: exclude,
-                    override: override,
-                    number: number,
+                    exclude: parseInt(obj.evonum) > 0, // Convert to boolean
+                    excludeValue: parseInt(obj.evonum) || 0,
+                    override: obj.latergenevo || null,
                     alternatives: [], // Will store references to alternative versions
                     group: null
                 };
 
+                CATEGORIES.forEach(cat => {
+                    newObj[`category${cat.id}`] = categoryValues[`category${cat.id}`];
+                });
+
                 allObjects.push(newObj);
-                objectMap.set(key, newObj);
-                objectMap.set(obj.name, newObj); // Also map by name for baseSpecies lookup
+                            // DEBUG: Output the complete processed object
+                console.log('\n✅ Processed object details:');
+                console.log(`  ID: ${newObj.id}`);
+                console.log(`  Name: ${newObj.name}`);
+                console.log(`  Filename: ${newObj.filename}`);
+                console.log(`  Number: ${newObj.number}`);
+                console.log(`  Categories array: [${newObj.categories.join(', ')}]`);
+                console.log(`  Primary category: ${newObj.primaryCategory}`);
+
+                // Log all category values
+                console.log('  Category values:');
+                CATEGORIES.forEach(cat => {
+                    console.log(`    Cat ${cat.id}: ${newObj[`category${cat.id}`]}`);
+                });
+
+                console.log(`  Properties (${newObj.properties.length}): [${newObj.properties.join(', ')}]`);
+                console.log(`  isBase: ${newObj.isBase}`);
+                console.log(`  baseSpecies: ${newObj.baseSpecies || 'none'}`);
+                console.log(`  exclude: ${newObj.exclude} (value: ${newObj.excludeValue})`);
+                console.log(`  override: ${newObj.override || 'none'}`);
+                console.log('-'.repeat(50));
             }
 
-            // Second pass: link alternatives to their base objects
+            console.log(`\n========== FINISHED PROCESSING ${allObjects.length} OBJECTS ==========`);
+
+            // Create a map for quick lookups
+            const objectMap = new Map();
+            allObjects.forEach(obj => {
+                objectMap.set(obj.name, obj);
+                objectMap.set(obj.key, obj);
+            });
+
+            // Link alternatives to their base objects
             allObjects.forEach(obj => {
                 if (!obj.isBase && obj.baseSpecies) {
-                    // Find the base object by name
                     const baseObj = allObjects.find(o => o.name === obj.baseSpecies);
                     if (baseObj) {
                         if (!baseObj.alternatives) {
@@ -1577,45 +1588,32 @@
                         }
                         baseObj.alternatives.push(obj);
                         console.log(`Linked alternative ${obj.name} to base ${baseObj.name}`);
-                    } else {
-                        console.warn(`Base object not found for ${obj.name}: ${obj.baseSpecies}`);
                     }
                 }
             });
 
-            // Build override lookup map
-            const overrideMap = new Map();
-            allObjects.forEach(obj => {
-                if (obj.override) {
-                    if (!overrideMap.has(obj.override)) {
-                        overrideMap.set(obj.override, []);
-                    }
-                    overrideMap.get(obj.override).push(obj);
-                }
-            });
-
-            // Store override map globally for filtering
-            window.overrideMap = overrideMap;
-
-            // Filter out alternatives from the main objects array - they won't be separate cards
+            // Filter to base objects (alternatives will be handled through the base)
             const baseObjects = allObjects.filter(obj => obj.isBase);
             console.log(`Loaded ${baseObjects.length} base objects with ${allObjects.length - baseObjects.length} alternatives`);
 
-            // Replace allObjects with just base objects
+            // Store all objects for reference but use base objects for gameplay
+            trueallObjects = allObjects;
             allObjects = baseObjects;
 
-            if (allObjects.length === 0) {
-                showMessage('No base objects were loaded!', 'error');
-                return;
-            }
 
-            console.log(`\n=== SUMMARY ===`);
-            console.log(`Total objects processed: ${objectCount}`);
-            console.log(`Total objects loaded: ${allObjects.length}`);
+            // Build override map for exclude/override logic
+            window.overrideMap = new Map();
+            allObjects.forEach(obj => {
+                if (obj.override) {
+                    if (!window.overrideMap.has(obj.override)) {
+                        window.overrideMap.set(obj.override, []);
+                    }
+                    window.overrideMap.get(obj.override).push(obj);
+                }
+            });
 
             if (allObjects.length === 0) {
-                showMessage('No objects were loaded! Check console for details.', 'error');
-                return;
+                throw new Error('No base objects were loaded!');
             }
 
             // Initialize game
@@ -1631,7 +1629,6 @@
 
     function toggleCategory(category) {
         const checkbox = document.getElementById(`cat${category}Toggle`);
-        console.log(`Toggling category ${category}, checked:`, checkbox.checked);
 
         if (checkbox.checked) {
             if (!activeCategories.includes(category)) {
@@ -1644,129 +1641,219 @@
         }
     }
 
-    function shouldIncludeObject(obj, lst) {
-        // First check: if exclude is false (0), always include
+    function toggleDex() {
+        includeDex = document.getElementById('DexToggle').checked;
+
+        // Update object cards to reflect mode change
+        applyCategoryFilter();
+        renderGame();
+    }
+
+    function toggleDLC() {
+        includeDLC = document.getElementById('DLCToggle').checked;
+
+        // Update object cards to reflect mode change
+        applyCategoryFilter();
+        renderGame();
+    }
+
+    function toggleForme() {
+        includeForme = document.getElementById('FormeToggle').checked;
+
+        // Update object cards to reflect mode change
+        applyCategoryFilter();
+        renderGame();
+    }
+
+    function togglePreEvo() {
+        includePrevo = document.getElementById('PreEvoToggle').checked;
+
+        // Update object cards to reflect mode change
+        applyCategoryFilter();
+        renderGame();
+    }
+
+
+    function shouldIncludeObject(obj, activeCats) {
+        // Check if the object itself matches any active category
+        const selfNative = activeCats.some(catId => {
+            const catValue = obj[`category${catId}`];
+            return catValue === 'N';
+        });
+
+        //console.log(obj, ' ', selfNative);
+
+        const selfIntroduced = activeCats.some(catId => {
+            const catValue = obj[`category${catId}`];
+            return catValue === 'I';
+        });
+
+        const selfNativeDLC = activeCats.some(catId => {
+            const catValue = obj[`category${catId}`];
+            return catValue === 'DN';
+        });
+
+        const selfIntroducedDLC = activeCats.some(catId => {
+            const catValue = obj[`category${catId}`];
+            return catValue === 'DI';
+        });
+
+        const selfForme = activeCats.some(catId => {
+            const catValue = obj[`category${catId}`];
+            return catValue === 'F';
+        });
+b
+        if (selfNative ) {
+            return shouldIncludeWithExclude(obj, activeCats);
+        } else if (selfIntroduced ) {
+            if (includeDex === true) {
+                return shouldIncludeWithExclude(obj, activeCats);
+            }
+        } else if (selfNativeDLC ) {
+            if (includeDLC === true) {
+                return shouldIncludeWithExclude(obj, activeCats);
+            }
+        } else if (selfIntroducedDLC ) {
+            if (includeDLC === true & includeDex === true) {
+                return shouldIncludeWithExclude(obj, activeCats);
+            }
+        } else if (selfForme ) {
+            const baseObj = allObjects.find(b => b.name === obj.baseSpecies);
+            if (includeForme === true) {
+                if (shouldIncludeObject(baseObj, activeCategories)) {
+                    return shouldIncludeWithExclude(obj, activeCats);
+                }
+            }
+        }
+        // Object doesn't match, but check if any of its alternatives match
+        if (obj.alternatives && obj.alternatives.length > 0) {
+            const anyAlternativeMatches = obj.alternatives.some(alt => {
+                return activeCats.some(catId => {
+                    const catValue = alt[`category${catId}`];
+                    return catValue > 0;
+                });
+            });
+
+            if (anyAlternativeMatches) {
+                console.log(`Including ${obj.name} because an alternative matches active categories`);
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    // Separate function for exclude/override logic
+    function shouldIncludeWithExclude(obj, activeCats) {
+        // If exclude is false (0), always include
+        if (includePrevo === true) {
+            return true;
+        }
+
         if (!obj.exclude) {
             return true;
         }
 
         // Object has exclude > 0, check if it has an override
-        if (obj.override == 0) {
-            // No override, object is excluded
-            console.log(`${obj.name} excluded (no override)`);
+        if (!obj.override) {
             return false;
         }
 
         // Find the override object
-        const overrideObj = lst.find(o => o.name === obj.override);
-        if (overrideObj) {
-            // Override object not found, object is excluded
-            console.log(`${obj.name} excluded (override ${obj.override} found)`);
+        const overrideObj = allObjects.find(o => o.name === obj.override);
+        if (!overrideObj) {
             return false;
         }
-        if (!overrideObj) {
-            // Override object not found, object is included
-            console.log(`${obj.name} included (override ${obj.override} not found)`);
-            return true;
-        }
+
+        // Check if override object would be filtered out by current categories
+        const overrideIncluded = activeCats.some(catId => {
+            const catValue = overrideObj[`category${catId}`];
+            return catValue != 0;
+        });
+
+        // If override is filtered out, include this object
+        return !shouldIncludeObject(overrideObj, activeCats);
     }
 
     function applyCategoryFilter() {
         console.log('Applying filter with active categories:', activeCategories);
 
-        // Simple explicit check
-        tempobjects = [];
+        // First, identify which base objects pass the filter
+        const baseObjects = trueallObjects.filter(obj => obj.isBase);
+        const passingBaseIds = new Set();
+        const basePassMap = new Map(); // Track which bases pass
 
-        for (let obj of allObjects) {
-            let include = false;
+        baseObjects.forEach(base => {
+            const hasActiveCategory = activeCategories.some(catId => {
+                const catValue = base[`category${catId}`];
+                return catValue != 0;
+            });
 
-            // Check each active category
-            if (activeCategories.includes(1) && obj.KantoDex > 0) {
-                include = true;
-                console.log(`Including ${obj.name}: cat1=${obj.KantoDex} > 0`);
-            }
-            if (activeCategories.includes(2) && obj.JohtoDex > 0) {
-                include = true;
-                console.log(`Including ${obj.name}: cat2=${obj.JohtoDex} > 0`);
-            }
-            if (activeCategories.includes(3) && obj.HoennDex > 0) {
-                include = true;
-                console.log(`Including ${obj.name}: cat3=${obj.HoennDex} > 0`);
-            }
-            if (activeCategories.includes(4) && obj.SinnohDex > 0) {
-                include = true;
-                console.log(`Including ${obj.name}: cat4=${obj.SinnohDex} > 0`);
-            }
-            if (activeCategories.includes(5) && obj.UnovaDex > 0) {
-                include = true;
-                console.log(`Including ${obj.name}: cat5=${obj.UnovaDex} > 0`);
-            }
-            if (activeCategories.includes(6) && obj.KalosDex > 0) {
-                include = true;
-                console.log(`Including ${obj.name}: cat6=${obj.KalosDex} > 0`);
-            }
-            if (activeCategories.includes(7) && obj.AlolaDex > 0) {
-                include = true;
-                console.log(`Including ${obj.name}: cat7=${obj.AlolaDex} > 0`);
-            }
-            if (activeCategories.includes(8) && obj.AlolaDLC > 0) {
-                include = true;
-                console.log(`Including ${obj.name}: cat8=${obj.AlolaDLC} > 0`);
-            }
-            if (activeCategories.includes(9) && obj.GalarDex > 0) {
-                include = true;
-                console.log(`Including ${obj.name}: cat9=${obj.GalarDex} > 0`);
-            }
-            if (activeCategories.includes(10) && obj.GalarDLC > 0) {
-                include = true;
-                console.log(`Including ${obj.name}: cat10=${obj.GalarDLC} > 0`);
-            }
-            if (activeCategories.includes(11) && obj.HisuiDex > 0) {
-                include = true;
-                console.log(`Including ${obj.name}: cat11=${obj.HisuiDex} > 0`);
-            }
-            if (activeCategories.includes(12) && obj.PaldeaDex > 0) {
-                include = true;
-                console.log(`Including ${obj.name}: cat12=${obj.PaldeaDex} > 0`);
-            }
-            if (activeCategories.includes(13) && obj.PaldeaDLC > 0) {
-                include = true;
-                console.log(`Including ${obj.name}: cat13=${obj.PaldeaDLC} > 0`);
-            }
-            if (activeCategories.includes(14) && obj.LumioseDex > 0) {
-                include = true;
-                console.log(`Including ${obj.name}: cat14=${obj.LumioseDex} > 0`);
-            }
-            if (activeCategories.includes(15) && obj.LumioseDLC > 0) {
-                include = true;
-                console.log(`Including ${obj.name}: cat15=${obj.LumioseDLC} > 0`);
-            }
-
-            if (include) {
-                tempobjects.push({...obj, group: null});
+            if (hasActiveCategory) {
+                passingBaseIds.add(base.id);
+                basePassMap.set(base.id, true);
             } else {
-                console.log(`Excluding ${obj.name}: no matching categories`);
+                basePassMap.set(base.id, false);
             }
-        }
+        });
 
-        objects = [];
+        console.log(`Base objects passing filter: ${passingBaseIds.size}`);
 
+        // Collect objects to include (bases + promoted alternatives)
+        const objectsToInclude = [];
 
-        for (let obj of tempobjects) {
-            if (shouldIncludeObject(obj, tempobjects)) {
-                objects.push({...obj, group: null});
+        // First, add all passing base objects
+        baseObjects.forEach(base => {
+            if (passingBaseIds.has(base.id)) {
+                objectsToInclude.push({ ...base, group: null });
             }
-        }
+        });
 
-        console.log(`Filtered objects count: ${objects.length}`);
+        // Now handle alternatives whose bases didn't pass
+        const promotedAlternatives = [];
+
+        trueallObjects.forEach(obj => {
+            console.log(obj);
+            if (!obj.isBase) {
+                const baseObj = baseObjects.find(b => b.name === obj.baseSpecies);
+                // If base exists and doesn't pass filter, promote this alternative
+                if (!shouldIncludeObject(baseObj, activeCategories)) {
+                    // Check if this alternative itself passes the filter
+                    if (shouldIncludeObject(obj, activeCategories)) {
+                        // Create a promoted base object
+                        const promoted = {
+                            ...obj,
+                            isBase: true, // Now it's a base
+                            originalBase: obj.baseSpecies, // Track original for debugging
+                            alternatives: [], // Will be empty or could include other alternatives
+                            group: null
+                        };
+                        promotedAlternatives.push(promoted);
+                    }
+                }
+            }
+        });
+
+        // Add promoted alternatives to the objects list
+        objectsToInclude.push(...promotedAlternatives);
+
+        console.log(`Promoted ${promotedAlternatives.length} alternatives to base status`);
+
+        // Now apply exclude/override logic to all collected objects
+        objects = objectsToInclude
+            .filter(obj => shouldIncludeObject(obj, activeCategories))
+            .map(obj => ({ ...obj, group: null }));
+
+        console.log(`Final objects count after exclude/override: ${objects.length}`);
 
         if (objects.length === 0) {
-            showMessage('No objects match selected categories!', 'warning');
+            showMessage('No objects match the filter criteria!', 'warning');
             return;
         }
 
-        // Calculate number of groups needed (3 objects per group)
-        const groupCount = Math.ceil(objects.length / 3);
+        // Calculate number of groups needed
+        const groupCount = Math.floor(objects.length / 3);
+        const remainder = objects.length % 3;
 
         // Create groups
         groups = [];
@@ -1787,7 +1874,7 @@
 
         renderGame();
 
-        const categoryNames = activeCategories.map(c => `Cat ${c}`).join(', ');
+        const categoryNames = activeCategories.map(id => `Cat ${id}`).join(', ');
         showMessage(`Loaded ${objects.length} objects from ${categoryNames}`, 'warning');
     }
 
@@ -1800,23 +1887,12 @@
 
     function initializeGame() {
         window.gameStartTime = Date.now();
-        // Ensure all categories are checked
-        document.getElementById('cat1Toggle').checked = false;
-        document.getElementById('cat2Toggle').checked = false;
-        document.getElementById('cat3Toggle').checked = false;
-        document.getElementById('cat4Toggle').checked = false;
-        document.getElementById('cat5Toggle').checked = false;
-        document.getElementById('cat6Toggle').checked = false;
-        document.getElementById('cat7Toggle').checked = false;
-        document.getElementById('cat8Toggle').checked = false;
-        document.getElementById('cat9Toggle').checked = false;
-        document.getElementById('cat10Toggle').checked = false;
-        document.getElementById('cat11Toggle').checked = false;
-        document.getElementById('cat12Toggle').checked = false;
-        document.getElementById('cat13Toggle').checked = false;
-        document.getElementById('cat14Toggle').checked = true;
-        document.getElementById('cat15Toggle').checked = true;
-        activeCategories = [14, 15];
+        renderCategoryToggles();
+
+        activeCategories.forEach(catId => {
+            const checkbox = document.getElementById(`cat${catId}Toggle`);
+            if (checkbox) checkbox.checked = true;
+        });
 
         currentSort = 'number-asc';
         const sortSelect = document.getElementById('sortSelect');
@@ -1949,7 +2025,7 @@
 
         let validAltCount = 0;
         obj.alternatives.forEach((alt, idx) => {
-            if (objectPassesFilter(alt)) {
+            if (shouldIncludeObject(alt, activeCategories)) {
                 validAltCount = 1
             }
         })
@@ -1997,23 +2073,16 @@
     }
 
     function toggleAllCategories(turnOn) {
-        // Update all checkboxes
-        for (let i = 1; i <= 15; i++) {
-            const checkbox = document.getElementById(`cat${i}Toggle`);
+        CATEGORIES.forEach(cat => {
+            const checkbox = document.getElementById(`cat${cat.id}Toggle`);
             if (checkbox) {
                 checkbox.checked = turnOn;
             }
-        }
+        });
 
-        // Update activeCategories array
-        if (turnOn) {
-            activeCategories = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
-        } else {
-            activeCategories = [];
-        }
+        activeCategories = turnOn ? CATEGORIES.map(c => c.id) : [];
 
-        const state = turnOn ? 'enabled' : 'disabled';
-        showMessage(`All categories ${state} - Click 'Apply Filters' to update`, 'warning');
+        showMessage(`All categories ${turnOn ? 'enabled' : 'disabled'} - Click 'Apply Filters' to update`, 'warning');
     }
 
     function renderGroups() {
@@ -2026,6 +2095,16 @@
 
             const groupDiv = document.createElement('div');
             groupDiv.className = 'group';
+
+            // Add highlight class if this group is highlighted
+            if (highlightedGroups.has(group.id)) {
+                groupDiv.classList.add('highlight');
+            }
+
+            // Add highlight class if this group is highlighted
+            if (highlightedGroups2.has(group.id)) {
+                groupDiv.classList.add('highlight2');
+            }
 
             // Add completion class if group has 3 objects
             if (objectCount === 3) {
@@ -2055,6 +2134,20 @@
 
             // Assemble the group
             groupDiv.appendChild(objectsDiv);
+
+                // Add click handler for highlighting
+            groupDiv.addEventListener('click', (e) => {
+                // Don't highlight if clicking on an object card
+                if (e.target.closest('.object-card')) return;
+                toggleGroupHighlight(group.id, true);
+            });
+
+            groupDiv.addEventListener('contextmenu', (e) => {
+                // Don't highlight if clicking on an object card
+                if (e.target.closest('.object-card')) return;
+                e.preventDefault()
+                toggleGroupHighlight2(group.id, true);
+            });
 
             groupsGrid.appendChild(groupDiv);
         });
@@ -2207,7 +2300,80 @@
         showMessage('Object moved to remainder box', 'warning');
     }
 
-    javascript
+
+    // Function to toggle group highlight
+    function toggleGroupHighlight(groupId, multiSelect = false) {
+        if (!multiSelect) {
+            // Single select mode - clear all other highlights
+            highlightedGroups.clear();
+            activeHighlight = groupId;
+        }
+
+        // Toggle this group
+        if (highlightedGroups2.has(groupId)) {
+            highlightedGroups2.delete(groupId);
+        }
+        if (highlightedGroups.has(groupId)) {
+            highlightedGroups.delete(groupId);
+            if (activeHighlight === groupId) {
+                activeHighlight = null;
+            }
+        } else {
+            highlightedGroups.add(groupId);
+            activeHighlight = groupId;
+        }
+
+        // Re-render to show changes
+        renderGame();
+
+        // Show message about highlighted groups
+        if (highlightedGroups.size > 0) {
+            const groupNames = Array.from(highlightedGroups)
+                .map(id => String.fromCharCode(65 + id))
+                .join(', ');
+            showMessage(`Highlighted groups: ${groupNames}`, 'warning');
+        }
+    }
+
+    function toggleGroupHighlight2(groupId, multiSelect = false) {
+        if (!multiSelect) {
+            // Single select mode - clear all other highlights
+            highlightedGroups2.clear();
+            activeHighlight2 = groupId;
+        }
+
+        // Toggle this group
+        if (highlightedGroups.has(groupId)) {
+            highlightedGroups.delete(groupId);
+        }
+        if (highlightedGroups2.has(groupId)) {
+            highlightedGroups2.delete(groupId);
+            if (activeHighlight2 === groupId) {
+                activeHighlight2 = null;
+            }
+        } else {
+            highlightedGroups2.add(groupId);
+            activeHighlight2 = groupId;
+        }
+
+        // Re-render to show changes
+        renderGame();
+
+        // Show message about highlighted groups
+        if (highlightedGroups2.size > 0) {
+            const groupNames = Array.from(highlightedGroups2)
+                .map(id => String.fromCharCode(65 + id))
+                .join(', ');
+            showMessage(`Highlighted groups2: ${groupNames}`, 'warning');
+        }
+    }
+
+    // Function to clear all highlights
+    function clearHighlights() {
+        highlightedGroups.clear();
+        activeHighlight = null;
+        renderGame();
+    }
 
     function canPlaceInRemainderBox(object, remainderObjects) {
         // Same property conflict rules apply in remainder box
@@ -2406,7 +2572,7 @@
         console.log(`Checking ${obj.alternatives.length} alternatives for ${obj.name}:`);
         const validAlternatives = obj.alternatives.filter(alt => {
             console.log(`\n--- Checking alternative: ${alt.name} ---`);
-            const passes = objectPassesFilter(alt);
+            const passes = shouldIncludeObject(alt, activeCategories);
             console.log(`Result: ${passes ? 'ALLOWED' : 'FILTERED OUT'}`);
             return passes;
         });
@@ -2683,6 +2849,13 @@ function handleDragOver(e) {
         this.classList.remove('drag-invalid');
     }
 
+    function clearHighlights() {
+        highlightedGroups.clear();
+        highlightedGroups2.clear();
+        activeHighlight = null;
+        renderGame();
+    }
+
     function handleDrop(e) {
         e.preventDefault();
         e.stopPropagation();
@@ -2720,6 +2893,11 @@ function handleDragOver(e) {
 
         // Place the object in target group
         object.group = targetGroupId;
+
+        const newTargetGroupObjects = objects.filter(obj => obj.group === targetGroupId);
+        if (newTargetGroupObjects.length === 3) {
+            highlightedGroups.delete(targetGroupId);
+        }
 
         // If source was a group (not pool), we don't need to do anything else
         // The object is now in the new group
@@ -2772,82 +2950,6 @@ function handleDragOver(e) {
         }
 
         return true;
-    }
-
-    function objectPassesFilter(obj) {
-        if (!obj) return false;
-
-        let include = false;
-
-        // Check each active category
-        if (activeCategories.includes(1) && obj.KantoDex > 0) {
-            include = true;
-            console.log(`Including ${obj.name}: cat1=${obj.KantoDex} > 0`);
-        }
-        if (activeCategories.includes(2) && obj.JohtoDex > 0) {
-            include = true;
-            console.log(`Including ${obj.name}: cat2=${obj.JohtoDex} > 0`);
-        }
-        if (activeCategories.includes(3) && obj.HoennDex > 0) {
-            include = true;
-            console.log(`Including ${obj.name}: cat3=${obj.HoennDex} > 0`);
-        }
-        if (activeCategories.includes(4) && obj.SinnohDex > 0) {
-            include = true;
-            console.log(`Including ${obj.name}: cat4=${obj.SinnohDex} > 0`);
-        }
-        if (activeCategories.includes(5) && obj.UnovaDex > 0) {
-            include = true;
-            console.log(`Including ${obj.name}: cat5=${obj.UnovaDex} > 0`);
-        }
-        if (activeCategories.includes(6) && obj.KalosDex > 0) {
-            include = true;
-            console.log(`Including ${obj.name}: cat6=${obj.KalosDex} > 0`);
-        }
-        if (activeCategories.includes(7) && obj.AlolaDex > 0) {
-            include = true;
-            console.log(`Including ${obj.name}: cat7=${obj.AlolaDex} > 0`);
-        }
-        if (activeCategories.includes(8) && obj.AlolaDLC > 0) {
-            include = true;
-            console.log(`Including ${obj.name}: cat8=${obj.AlolaDLC} > 0`);
-        }
-        if (activeCategories.includes(9) && obj.GalarDex > 0) {
-            include = true;
-            console.log(`Including ${obj.name}: cat9=${obj.GalarDex} > 0`);
-        }
-        if (activeCategories.includes(10) && obj.GalarDLC > 0) {
-            include = true;
-            console.log(`Including ${obj.name}: cat10=${obj.GalarDLC} > 0`);
-        }
-        if (activeCategories.includes(11) && obj.HisuiDex > 0) {
-            include = true;
-            console.log(`Including ${obj.name}: cat11=${obj.HisuiDex} > 0`);
-        }
-        if (activeCategories.includes(12) && obj.PaldeaDex > 0) {
-            include = true;
-            console.log(`Including ${obj.name}: cat12=${obj.PaldeaDex} > 0`);
-        }
-        if (activeCategories.includes(13) && obj.PaldeaDLC > 0) {
-            include = true;
-            console.log(`Including ${obj.name}: cat13=${obj.PaldeaDLC} > 0`);
-        }
-        if (activeCategories.includes(14) && obj.LumioseDex > 0) {
-            include = true;
-            console.log(`Including ${obj.name}: cat14=${obj.LumioseDex} > 0`);
-        }
-        if (activeCategories.includes(15) && obj.LumioseDLC > 0) {
-            include = true;
-            console.log(`Including ${obj.name}: cat15=${obj.LumioseDLC} > 0`);
-        }
-
-        if (include) {
-            console.log(`  ✓ ${obj.name} PASSED`);
-            return true;
-        } else {
-            console.log(`  ✗ ${obj.name} FAILED - no active category > 0`);
-            return false;
-        }
     }
 
     function updateStats() {
@@ -2976,6 +3078,42 @@ function handleDragOver(e) {
         messageDiv.className = `message ${type}`;
     }
 
+    function renderCategoryToggles() {
+        const grid = document.getElementById('categoryGrid');
+        if (!grid) return;
+
+        grid.innerHTML = '';
+
+        CATEGORIES.forEach(cat => {
+            const item = document.createElement('div');
+            item.className = 'category-item';
+
+            const nameSpan = document.createElement('span');
+            nameSpan.className = `category-name category-${cat.id}-text`;
+            nameSpan.textContent = cat.name;
+
+            const label = document.createElement('label');
+            label.className = `toggle-btn category-${cat.id}`;
+
+            const input = document.createElement('input');
+            input.type = 'checkbox';
+            input.id = `cat${cat.id}Toggle`;
+            input.checked = activeCategories.includes(cat.id);
+            input.onchange = () => toggleCategory(cat.id);
+
+            const checkmark = document.createElement('span');
+            checkmark.className = 'checkmark';
+
+            label.appendChild(input);
+            label.appendChild(checkmark);
+
+            item.appendChild(nameSpan);
+            item.appendChild(label);
+
+            grid.appendChild(item);
+        });
+    }
+
     function showSolutionPopup(result) {
         console.log('Popup received:', result); // DEBUG: See what we're getting
 
@@ -3036,6 +3174,12 @@ function handleDragOver(e) {
         const popup = document.getElementById('solutionPopup');
         popup.classList.remove('show');
     }
+
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'r' || event.key === 'R') {
+            clearHighlights();
+        }
+    })
 
     // Close popup with Escape key
     document.addEventListener('keydown', function(event) {
