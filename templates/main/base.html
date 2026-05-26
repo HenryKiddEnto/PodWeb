@@ -21,9 +21,6 @@
                     <img src="{% static 'images/GryonIcon.png' %}"
                          alt="{{ site_name }} Logo"
                          class="logo-image">
-                    <div class="site-title">
-                        {{ site_name|default:"Parasitoid" }}<span>{{ site_name_suffix|default:"Pod" }}</span>
-                    </div>
                 </div>
             </a>
             <!-- Apps Section (Sidebar Buttons) -->
@@ -39,8 +36,8 @@
                 <a href="{% url 'typechallenge' %}" class="app-button">
                     🔥 Type Challenge
                 </a>
-                <a href="#" class="app-button" onclick="alert('Mystery wheels are my next project. Stay tuned!')">
-                    🛞 Mystery Wheels
+                <a href="{% url 'wheel' %}" class="app-button">
+                    🛞 Teambuilding Wheel
                 </a>
                 <a href="{% url 'blog' %}" class="app-button">
                     📰 Pod Press
@@ -51,7 +48,7 @@
                 {% endfor %}
             </div>
             <div class="footer">
-                <p>&copy; 2026 Henry Kidd</p>
+                <p>&copy; 2026 Parasitoid Pod</p>
             </div>
         </div>
 

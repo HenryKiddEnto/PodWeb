@@ -42,3 +42,6 @@ def gallery(request):
 def gallery_photo(request, photo_id):
     photo = get_object_or_404(GalleryPhoto, id=photo_id)
     return render(request, 'main/gallery_photo.html', {'photo': photo})
+
+def wheel(request):
+    return render(request, 'main/wheel.html')

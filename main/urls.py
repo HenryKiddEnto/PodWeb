@@ -14,6 +14,7 @@ urlpatterns = [
     path('blog/<slug:slug>/', views.blog_detail, name='blog_detail'),
     path('gallery/', views.gallery, name='gallery'),
     path('gallery/<int:photo_id>/', views.gallery_photo, name='gallery_photo'),
+    path('wheel/', views.wheel, name='wheel'),
 ]
 
 

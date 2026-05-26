@@ -1,0 +1,3648 @@
+{% extends 'main/base.html' %}
+{% load static %}
+
+{% block title %}Group Sorting Game{% endblock %}
+
+{% block content %}
+<div class="game-container">
+    <div class="game-header">
+    </div>
+
+    <!-- Generation Toggles -->
+    <div class="category-toggles">
+        <span class="category-label">Generations:</span>
+        <div class="category-grid" id="categoryGrid">
+            <!-- Generations will be inserted here by JavaScript -->
+        </div>
+
+        <!-- Generation Actions and Filters -->
+        <div class="category-actions">
+            <button class="btn spin-btn" onclick="spinTheWheel()">Spin the Wheel!</button>
+            <button class="btn" onclick="resetGame()">Reset</button>
+            <span class="filtered-count" id="filteredCount"></span>
+<!--
+            <div class="simple-toggle">
+                <span class="simple-label">Full Regional Dex</span>
+                <label class="switch">
+                    <input type="checkbox" id="DexToggle" onchange="toggleDex()">
+                    <span class="slider round"></span>
+                </label>
+            </div>
+            <div class="simple-toggle">
+                <span class="simple-label">DLC Pokemon</span>
+                <label class="switch">
+                    <input type="checkbox" id="DLCToggle" onchange="toggleDLC()">
+                    <span class="slider round"></span>
+                </label>
+            </div> -->
+            <div class="mode-selector">
+                <label for="modeSelect" class="mode-label">Tier / Regulation:</label>
+                <select id="modeSelect" onchange="changeGameMode()">
+                    <!-- Populated dynamically by populateModeSelector() -->
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div class="game-layout">
+        <!-- Main Groups Area (Scrollable) -->
+        <div class="groups-main">
+            <!-- Curse Banner (inside scrollable area for visibility) -->
+            <div id="curseBanner" class="curse-banner" style="display:none;">
+                <span class="curse-icon">🔮</span>
+                <div class="curse-text">
+                    <strong id="curseName"></strong>
+                    <span id="curseDescription"></span>
+                </div>
+                <button class="curse-dismiss" onclick="dismissCurse()">✕ Lift Curse</button>
+            </div>
+
+            <!-- Stacking filter history banners -->
+            <div id="filterBanners"></div>
+
+            <div class="groups-grid" id="groupsGrid">
+                <!-- Groups will be dynamically created here -->
+            </div>
+        </div>
+
+        <!-- Right Sidebar - Objects Pool -->
+        <div class="objects-sidebar">
+            <div class="sidebar-header">
+                <h3>Pokémon Available</h3>
+                <div class="sort-controls">
+                    <select id="sortSelect" onchange="applySort()">
+                        <option value="tier">Tier</option>
+                        <option value="singles">Champ Singles</option>
+                        <option value="doubles">Champ Doubles</option>
+                        <option value="number-asc">Number</option>
+                        <option value="name-asc">Name</option>
+                        <option value="none">Shuffle</option>
+                    </select>
+                </div>
+            </div>
+            <div class="objects-container" id="objectsPool">
+                <!-- Objects will be dynamically inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <div class="game-controls">
+        <button class="btn" onclick="addGroup()">➕ Team</button>
+        <button class="btn" onclick="removeGroup()">➖ Team</button>
+        <button class="btn help-btn" onclick="showHelp()">⚙️ Settings</button>
+    </div>
+
+    <!-- <div class="message" id="message"></div> -->
+
+    <!-- Context Menu for Object Properties -->
+    <div id="contextMenu" class="context-menu">
+        <div class="context-menu-content" id="contextMenuContent"></div>
+    </div>
+</div>
+
+<!-- Filter Result Modal (shown after wheel lands) -->
+<div id="filterResultModal" class="filter-result-overlay" style="display:none;">
+    <div class="filter-result-panel">
+        <div class="filter-result-header">
+            <div class="filter-result-rarity" id="filterResultRarity"></div>
+            <h2 class="filter-result-name" id="filterResultName"></h2>
+            <p class="filter-result-desc" id="filterResultDesc"></p>
+        </div>
+        <div class="filter-result-body">
+            <div class="filter-result-stats" id="filterResultStats"></div>
+            <div class="filter-result-removed-label" id="filterResultRemovedLabel"></div>
+            <div class="filter-result-grid" id="filterResultGrid"></div>
+        </div>
+        <p class="filter-result-hint">Click anywhere or press any key to close</p>
+    </div>
+</div>
+
+<!-- Loading Message -->
+<div id="simpleLoader" class="simple-loader">
+    <div class="simple-spinner"></div>
+    <span>Loading game data...</span>
+</div>
+
+<!-- Help / Settings Modal -->
+<div id="helpModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>How to Play</h2>
+            <span class="close-btn" onclick="closeHelp()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <div class="help-section">
+                <h3>Game Objective</h3>
+                <p>Sort Pokémon into teams using the Spin the Wheel filters!</p>
+            </div>
+            <div class="help-section">
+                <h3>Basic Controls</h3>
+                <ul>
+                    <li><strong>Drag & Drop:</strong> Move Pokémon between teams</li>
+                    <li><strong>Right Click on Pokémon:</strong> View type weaknesses and alternate formes</li>
+                    <li><strong>Left / Right Click on Team:</strong> Highlight Blue / Red</li>
+                </ul>
+            </div>
+            <div class="help-section">
+                <h3>Teams</h3>
+                <ul>
+                    <li>Click <strong>Reset</strong> to start over</li>
+                    <li>Use <strong>➕ / ➖ Team</strong> to add or remove teams</li>
+                </ul>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn" onclick="closeHelp()">Got it!</button>
+        </div>
+    </div>
+</div>
+
+<!-- Spin the Wheel Overlay -->
+<div id="wheelOverlay" class="wheel-overlay" style="display: none;">
+    <div class="wheel-container">
+        <canvas id="rouletteWheel" width="500" height="500"></canvas>
+        <div class="wheel-pointer">▼</div>
+        <p class="wheel-skip-hint">Click or press any key to skip</p>
+    </div>
+</div>
+
+<style>
+
+    /* ====================================
+       STYLES THAT NEED EDITS (NEW GENERATIONS)
+       ==================================== */
+
+    /* Generation Backgrounds (Unchecked) */
+    .category-1 .checkmark  { background-color: #FFD1D1; }
+    .category-2 .checkmark  { background-color: #EEDEB0; }
+    .category-3 .checkmark  { background-color: #C2CFE8; }
+    .category-4 .checkmark  { background-color: #D5CADC; }
+    .category-5 .checkmark  { background-color: #D9D9D9; }
+    .category-6 .checkmark  { background-color: #D5F3ED; }
+    .category-7 .checkmark  { background-color: #FBF2D9; }
+    .category-8 .checkmark  { background-color: #f8bbd0; }
+    .category-9 .checkmark  { background-color: #D5CADC; }
+    .category-10 .checkmark { background-color: #B3E0FB; }
+
+    .toggle-btn:hover .checkmark {
+        transform: scale(1.1);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+
+    .toggle-btn input:checked ~ .checkmark {
+        background-color: currentColor;
+        border-color: white;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+
+    .toggle-btn input:checked ~ .checkmark::after {
+        content: "✓";
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        color: white;
+        font-size: 1.2rem;
+        font-weight: bold;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+    }
+
+    /* Generation Backgrounds (Checked) */
+    .category-1  input:checked ~ .checkmark { background-color: #F40A0A; }
+    .category-2  input:checked ~ .checkmark { background-color: #D5AD3B; }
+    .category-3  input:checked ~ .checkmark { background-color: #4A75CB; }
+    .category-4  input:checked ~ .checkmark { background-color: #AB6EAA; }
+    .category-5  input:checked ~ .checkmark { background-color: #696969; }
+    .category-6  input:checked ~ .checkmark { background-color: #4AC9B1; }
+    .category-7  input:checked ~ .checkmark { background-color: #FDD404; }
+    .category-8  input:checked ~ .checkmark { background-color: #ec407a; }
+    .category-9  input:checked ~ .checkmark { background-color: #9F34A3; }
+    .category-10 input:checked ~ .checkmark { background-color: #0A8AD8; }
+
+    /* ====================================
+       MAIN STYLES
+       ==================================== */
+
+    .game-layout {
+        display: flex;
+        gap: 15px;
+        /* Fill viewport minus the space used by toggles, controls and message bar */
+        height: calc(58vh);
+        min-height: 500px;
+    }
+
+    .groups-main {
+        flex: 3;
+        overflow-y: auto;
+        padding-right: 10px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 15px;
+    }
+
+    .groups-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(600px, 1fr));
+        gap: 8px;
+    }
+
+    .group {
+        background: white;
+        border-radius: 6px;
+        border: 1px solid #dee2e6;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        transition: all 0.2s ease;
+    }
+
+    .group-objects {
+        min-height: 120px;
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        gap: 2px;
+    }
+
+    .group.highlight {
+        background: #D5EEFF;
+        border-color: #0099FF;
+        box-shadow: 0 0 0 2px rgba(0, 153, 255, 0.2);
+        transition: all 0.2s ease;
+        padding: 0px;
+        margin-bottom: 0px;
+    }
+
+    .group.highlight2 {
+        background: #FBEAEC;
+        border-color: #DC3545;
+        box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.2);
+        transition: all 0.2s ease;
+        padding: 0px;
+        margin-bottom: 0px;
+    }
+
+    .group-objects.drag-over {
+        border-radius: 4px;
+    }
+
+    .group-objects.drag-valid {
+        background: rgba(40, 167, 69, 0.1);
+        border: 2px dashed #28a745;
+    }
+
+    .group-objects.drag-invalid {
+        background: rgba(220, 53, 69, 0.1);
+        border: 2px dashed #dc3545;
+        cursor: not-allowed;
+    }
+
+    .objects-sidebar {
+        flex: 1;
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 15px;
+        display: flex;
+        flex-direction: column;
+        min-width: 400px;
+    }
+
+    .objects-sidebar h3 {
+        font-size: 1rem;
+        margin-top: 0;
+        margin-bottom: 10px;
+        color: #2c3e50;
+    }
+
+    .sidebar-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .sidebar-header h3 {
+        margin: 0;
+        font-size: 1rem;
+    }
+
+    .objects-container {
+        overflow-y: auto;
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 4px;
+        padding: 4px;
+    }
+
+    .object-card {
+        border-radius: 4px;
+        cursor: move;
+        user-select: none;
+        transition: transform 0.1s, box-shadow 0.1s;
+        aspect-ratio: 1 / 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 2px;
+        position: relative;
+    }
+
+    .object-card:hover {
+        transform: translateY(-3px) scale(1.02);
+        box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+        z-index: 10;
+        filter: brightness(1.1);
+    }
+
+    .object-image {
+        width: 40px;
+        height: 40px;
+        object-fit: contain;
+        image-rendering: auto;
+        margin-bottom: 2px;
+    }
+
+    .group .object-image {
+        width: 80px;
+        height: 80px;
+    }
+
+    .property-dots {
+        display: flex;
+        gap: 2px;
+        justify-content: center;
+        flex-wrap: wrap;
+        max-width: 100%;
+        padding: 0 2px;
+    }
+
+    .property-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        display: inline-block;
+        border: 1px solid rgba(255,255,255,0.5);
+        cursor: help;
+        flex-shrink: 0;
+    }
+
+    .switching-icon {
+        position: absolute;
+        top: 2px;
+        right: 2px;
+        font-size: 0.7rem;
+        background: rgba(255,255,255,0.95);
+        color: #2c3e50;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        cursor: help;
+        z-index: 2;
+        transition: all 0.2s ease;
+        border: 1px solid white;
+    }
+
+    .switching-icon:hover {
+        transform: scale(1.1);
+        background: white;
+        box-shadow: 0 3px 6px rgba(0,0,0,0.3);
+    }
+
+    .action-btn {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        padding: 6px 10px;
+        font-size: 0.75rem;
+        cursor: pointer;
+        transition: all 0.1s;
+        text-align: left;
+        width: 100%;
+        margin-bottom: 4px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .action-btn:hover {
+        background: #e9ecef;
+        border-color: #adb5bd;
+    }
+
+    .action-btn:active {
+        background: #dee2e6;
+    }
+
+    .switch-base-btn {
+        background: #e3f2fd;
+        border-color: #90caf9;
+        color: #0d47a1;
+    }
+
+    .switch-base-btn:hover {
+        background: #bbdefb;
+    }
+
+    .alt-switch-btn {
+        background: #f3e5f5;
+        border-color: #ce93d8;
+        color: #4a148c;
+    }
+
+    .alt-switch-btn:hover {
+        background: #e1bee7;
+    }
+
+    .object-card.alternative-active::before {
+        content: '⚡';
+        position: absolute;
+        top: -2px;
+        left: -2px;
+        font-size: 0.5rem;
+        background: #ffd700;
+        color: #000;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid white;
+        z-index: 3;
+    }
+
+    .sort-controls select {
+        padding: 4px 8px;
+        border-radius: 4px;
+        border: 1px solid #dee2e6;
+        font-size: 0.75rem;
+        background: white;
+        cursor: pointer;
+    }
+
+    .sort-controls select:hover { border-color: #adb5bd; }
+    .sort-controls select:focus { outline: none; border-color: #595959; }
+
+    .context-section {
+        margin-bottom: 16px;
+    }
+
+    .context-section-title {
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 8px;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        text-align: center;
+    }
+
+    .context-menu {
+        display: none;
+        position: fixed;
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        z-index: 1000;
+        min-width: 150px;
+    }
+
+    .context-menu-header {
+        background: #f8f9fa;
+        padding: 8px 12px;
+        border-bottom: 1px solid #ddd;
+        font-weight: bold;
+        font-size: 0.8rem;
+        border-radius: 6px 6px 0 0;
+    }
+
+    .context-menu-content {
+        padding: 8px 12px;
+        font-size: 0.8rem;
+    }
+
+    .context-menu-content ul {
+        margin: 5px 0;
+        padding-left: 20px;
+    }
+
+    .property-chip-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
+    .property-chip {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 16px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: white;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        transition: transform 0.1s;
+        margin: auto;
+    }
+
+    .property-chip:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+
+    .no-weaknesses {
+        font-style: italic;
+        color: #adb5bd;
+        font-size: 0.75rem;
+    }
+
+    .object-card:hover::after {
+        content: attr(data-object-name);
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0,0,0,0.8);
+        color: white;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 0.6rem;
+        white-space: nowrap;
+        z-index: 100;
+        pointer-events: none;
+        margin-bottom: 4px;
+    }
+
+    /* Game Controls */
+    .game-controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+        margin: 15px 0 10px;
+        justify-content: center;
+    }
+
+    .game-controls .btn {
+        padding: 6px 10px;
+        font-size: 0.8rem;
+        background: #595959;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        white-space: nowrap;
+    }
+
+    .game-controls .btn:hover { background: #CB7E29; }
+
+    /* Tier / Regulation Selector */
+    .mode-selector {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        margin-left: 10px;
+    }
+
+    .mode-label {
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: #2c3e50;
+    }
+
+    #modeSelect {
+        padding: 4px 8px;
+        border-radius: 6px;
+        border: 1px solid #ced4da;
+        background: white;
+        font-size: 0.85rem;
+        cursor: pointer;
+    }
+
+    #modeSelect:hover { border-color: #007bff; }
+
+    /* Simple toggle switch */
+    .simple-toggle {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-left: 10px;
+    }
+
+    .switch {
+        position: relative;
+        display: inline-block;
+        width: 50px;
+        height: 24px;
+    }
+
+    .switch input { opacity: 0; width: 0; height: 0; }
+
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background-color: #ccc;
+        transition: .3s;
+        border-radius: 24px;
+    }
+
+    .slider:before {
+        position: absolute;
+        content: "";
+        height: 18px;
+        width: 18px;
+        left: 3px;
+        bottom: 3px;
+        background-color: white;
+        transition: .3s;
+        border-radius: 50%;
+    }
+
+    input:checked + .slider { background-color: #28a745; }
+    input:checked + .slider:before { transform: translateX(26px); }
+
+    .simple-label {
+        font-size: 0.85rem;
+        color: #2c3e50;
+        font-weight: 500;
+    }
+
+    /* Modal */
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 10000;
+        left: 0; top: 0;
+        width: 100%; height: 100%;
+        background-color: rgba(0,0,0,0.5);
+        animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to   { opacity: 1; }
+    }
+
+    .modal-content {
+        position: relative;
+        background-color: white;
+        margin: 5% auto;
+        padding: 0;
+        width: 90%;
+        max-width: 700px;
+        max-height: 80vh;
+        border-radius: 12px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        animation: slideDown 0.3s ease;
+        display: flex;
+        flex-direction: column;
+    }
+
+    @keyframes slideDown {
+        from { transform: translateY(-50px); opacity: 0; }
+        to   { transform: translateY(0);     opacity: 1; }
+    }
+
+    .modal-header {
+        padding: 15px 20px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 12px 12px 0 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-shrink: 0;
+    }
+
+    .modal-header h2 { margin: 0; font-size: 1.5rem; }
+
+    .close-btn {
+        font-size: 2rem;
+        font-weight: bold;
+        cursor: pointer;
+        line-height: 1;
+        transition: transform 0.2s;
+    }
+
+    .close-btn:hover { transform: scale(1.2); }
+
+    .modal-body {
+        padding: 20px;
+        overflow-y: auto;
+        max-height: calc(80vh - 130px);
+    }
+
+    .modal-footer {
+        padding: 15px 20px;
+        border-top: 1px solid #dee2e6;
+        text-align: right;
+        flex-shrink: 0;
+    }
+
+    .help-section {
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid #e9ecef;
+    }
+
+    .help-section:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+        padding-bottom: 0;
+    }
+
+    .help-section h3 { color: #2c3e50; margin: 0 0 10px 0; font-size: 1.1rem; }
+    .help-section ul { margin: 5px 0 0 20px; padding: 0; }
+    .help-section li { margin-bottom: 6px; line-height: 1.4; }
+
+    .green-text { color: #28a745; font-weight: bold; }
+
+    .help-btn { background: #595959 !important; }
+    .help-btn:hover { background: #0056b3 !important; }
+
+    @media (max-width: 768px) {
+        .modal-content { width: 95%; margin: 10% auto; }
+        .modal-header h2 { font-size: 1.2rem; }
+        .help-section h3 { font-size: 1rem; }
+        .help-section li { font-size: 0.9rem; }
+    }
+
+    /* Message Area */
+    .message {
+        padding: 8px;
+        border-radius: 4px;
+        font-size: 0.9rem;
+        text-align: center;
+        min-height: 40px;
+        display: none;
+    }
+
+    .message.success { background: #d4edda; color: #155724; }
+    .message.error   { background: #f8d7da; color: #721c24; }
+    .message.warning { background: #fff3cd; color: #856404; }
+
+    /* ── Curse Banner ─────────────────────────────────────────── */
+    .curse-banner {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        background: linear-gradient(135deg, #2d1b4e, #4a1a6b);
+        color: #e8d5ff;
+        border: 1px solid #9b59b6;
+        border-radius: 8px;
+        padding: 10px 16px;
+        margin-bottom: 10px;
+        box-shadow: 0 0 16px rgba(155, 89, 182, 0.4);
+        animation: cursePulse 3s ease-in-out infinite;
+    }
+
+    @keyframes cursePulse {
+        0%, 100% { box-shadow: 0 0 16px rgba(155, 89, 182, 0.4); }
+        50%       { box-shadow: 0 0 28px rgba(155, 89, 182, 0.7); }
+    }
+
+    .curse-icon { font-size: 1.5rem; flex-shrink: 0; }
+
+    .curse-text {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+
+    .curse-text strong { font-size: 0.95rem; color: #d7b8ff; }
+    .curse-text span   { font-size: 0.82rem; color: #c9a8f0; }
+
+    .curse-dismiss {
+        background: rgba(155, 89, 182, 0.3);
+        border: 1px solid #9b59b6;
+        color: #e8d5ff;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 0.78rem;
+        cursor: pointer;
+        transition: background 0.2s;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+
+    .curse-dismiss:hover { background: rgba(155, 89, 182, 0.55); }
+
+    /* ── Filter History Banners ───────────────────────────────── */
+    #filterBanners { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; }
+
+    .filter-banner {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        border-radius: 6px;
+        padding: 7px 12px;
+        font-size: 0.82rem;
+        cursor: pointer;
+        transition: filter 0.15s;
+        border: 1px solid transparent;
+    }
+
+    .filter-banner:hover { filter: brightness(1.1); }
+
+    .filter-banner.rarity-common {
+        background: #f5e8e8;
+        border-color: #c0392b;
+        color: #7b241c;
+    }
+
+    .filter-banner.rarity-rare {
+        background: #e8f0f8;
+        border-color: #2471a3;
+        color: #1a4f72;
+    }
+
+    .filter-banner.rarity-unique {
+        background: #fdf6d8;
+        border-color: #b7950b;
+        color: #7d6608;
+    }
+
+    .filter-banner-icon  { font-size: 1.1rem; flex-shrink: 0; }
+    .filter-banner-body  { flex: 1; display: flex; flex-direction: column; gap: 1px; }
+    .filter-banner-name  { font-weight: 600; }
+    .filter-banner-desc  { font-size: 0.75rem; opacity: 0.8; }
+    .filter-banner-count {
+        font-size: 0.75rem;
+        font-weight: 600;
+        opacity: 0.7;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+
+    /* ── Filter Result Modal ──────────────────────────────────── */
+    .filter-result-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.6);
+        z-index: 30000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        animation: fadeIn 0.2s ease;
+    }
+
+    .filter-result-panel {
+        background: #fff;
+        border-radius: 14px;
+        box-shadow: 0 24px 64px rgba(0,0,0,0.35);
+        width: 90%;
+        max-width: 560px;
+        max-height: 80vh;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        animation: slideUp 0.25s ease;
+    }
+
+    @keyframes slideUp {
+        from { transform: translateY(24px); opacity: 0; }
+        to   { transform: translateY(0);    opacity: 1; }
+    }
+
+    .filter-result-header {
+        padding: 20px 22px 14px;
+        border-bottom: 1px solid #e9ecef;
+    }
+
+    .filter-result-rarity {
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 4px;
+    }
+
+    .filter-result-rarity.rarity-common { color: #c0392b; }
+    .filter-result-rarity.rarity-rare   { color: #2471a3; }
+    .filter-result-rarity.rarity-unique { color: #b7950b; }
+    .filter-result-rarity.rarity-curse  { color: #9b59b6; }
+
+    .filter-result-name {
+        margin: 0 0 6px;
+        font-size: 1.3rem;
+        color: #1a1a2e;
+    }
+
+    .filter-result-desc {
+        margin: 0;
+        font-size: 0.88rem;
+        color: #555;
+        line-height: 1.4;
+    }
+
+    .filter-result-body {
+        flex: 1;
+        overflow-y: auto;
+        padding: 14px 22px 10px;
+    }
+
+    .filter-result-stats {
+        font-size: 0.82rem;
+        color: #666;
+        margin-bottom: 10px;
+    }
+
+    .filter-result-removed-label {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #888;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 8px;
+    }
+
+    .filter-result-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(52px, 1fr));
+        gap: 4px;
+    }
+
+    .filter-result-sprite {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 4px 2px;
+        border-radius: 4px;
+        background: #f8f9fa;
+        position: relative;
+    }
+
+    .filter-result-sprite img {
+        width: 48px;
+        height: 48px;
+        object-fit: contain;
+        image-rendering: auto;
+    }
+
+    .filter-result-sprite:hover::after {
+        content: attr(data-name);
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0,0,0,0.8);
+        color: white;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 0.6rem;
+        white-space: nowrap;
+        z-index: 100;
+        pointer-events: none;
+    }
+
+    .filter-result-hint {
+        padding: 10px 22px 14px;
+        margin: 0;
+        font-size: 0.75rem;
+        color: #aaa;
+        text-align: center;
+        border-top: 1px solid #f0f0f0;
+        flex-shrink: 0;
+    }
+
+    .filter-result-empty {
+        color: #aaa;
+        font-style: italic;
+        font-size: 0.85rem;
+        padding: 8px 0;
+    }
+
+    /* Scrollbar */
+    .groups-main::-webkit-scrollbar,
+    .objects-container::-webkit-scrollbar { width: 6px; }
+
+    .groups-main::-webkit-scrollbar-track,
+    .objects-container::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 3px; }
+
+    .groups-main::-webkit-scrollbar-thumb,
+    .objects-container::-webkit-scrollbar-thumb { background: #888; border-radius: 3px; }
+
+    /* Loading */
+    .simple-loader {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: rgba(0,0,0,0.8);
+        color: white;
+        padding: 8px 16px;
+        border-radius: 30px;
+        font-size: 0.85rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        z-index: 10000;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        backdrop-filter: blur(5px);
+        transition: opacity 0.3s ease;
+    }
+
+    .simple-loader.hidden { opacity: 0; pointer-events: none; }
+
+    .simple-spinner {
+        width: 16px;
+        height: 16px;
+        border: 2px solid rgba(255,255,255,0.3);
+        border-radius: 50%;
+        border-top-color: white;
+        animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Generation Toggles */
+    .category-toggles {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 15px;
+    }
+
+    .category-label {
+        display: block;
+        font-weight: bold;
+        color: #2c3e50;
+        margin-bottom: 12px;
+        font-size: 0.9rem;
+    }
+
+    .category-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+        gap: 10px;
+        margin-bottom: 4px;
+    }
+
+    .category-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        padding: 2px;
+        border-radius: 2px;
+        background: white;
+        border: 1px solid #e9ecef;
+        transition: all 0.2s ease;
+    }
+
+    .category-item:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .category-name {
+        font-size: 0.65rem;
+        font-weight: 600;
+        margin-bottom: 2px;
+        padding: 0;
+        border-radius: 1px;
+    }
+
+    .category-actions {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 1px solid #dee2e6;
+        flex-wrap: wrap;
+    }
+
+    .category-actions .btn {
+        height: 30px;
+        padding: 6px 16px;
+        font-size: 0.85rem;
+        background: #595959;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        margin-top: 0;
+        transition: background-color 0.2s;
+    }
+
+    .category-actions .btn:hover { background: #CB7E29; }
+
+    .filtered-count {
+        font-size: 0.85rem;
+        color: #6c757d;
+        margin-left: auto;
+    }
+
+    .toggle-btn {
+        position: relative;
+        display: inline-block;
+        width: 32px;
+        height: 34px;
+        cursor: pointer;
+        border-radius: 6px;
+        transition: all 0.2s ease;
+    }
+
+    .toggle-btn input {
+        position: absolute;
+        opacity: 0;
+        cursor: pointer;
+        height: 0;
+        width: 0;
+    }
+
+    .checkmark {
+        position: absolute;
+        top: 0; left: 0;
+        height: 32px;
+        width: 32px;
+        background-color: #e9ecef;
+        border-radius: 16px;
+        transition: all 0.2s ease;
+        border: 2px solid transparent;
+    }
+
+    .objects-container.grouped {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 4px;
+        align-items: start;
+    }
+
+    .group-separator {
+        grid-column: 1 / -1;
+        height: 0;
+        margin: 12px 0 8px 0;
+        border-bottom: 1px solid #e9ecef;
+    }
+
+    .objects-container .group-header {
+        grid-column: 1 / -1;
+        background: #f8f9fa;
+        padding: 4px 8px;
+        margin-top: 8px;
+        margin-bottom: 4px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #2c3e50;
+        border-radius: 12px;
+    }
+
+    .objects-container .group-header:first-of-type { margin-top: 0; }
+
+    .spin-btn {
+        background: #fd7e14 !important;
+        transition: all 0.2s ease;
+    }
+
+    .spin-btn:hover { background: #e8590c !important; }
+
+    .wheel-overlay {
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background: transparent;
+        z-index: 20000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .wheel-container { position: relative; text-align: center; }
+
+    .wheel-pointer {
+        position: absolute;
+        top: -30px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 40px;
+        color: white;
+        text-shadow: 0 0 5px black;
+        z-index: 10;
+    }
+
+    .wheel-skip-hint {
+        margin-top: 14px;
+        color: rgba(255,255,255,0.6);
+        font-size: 0.8rem;
+        letter-spacing: 0.3px;
+    }
+
+    #rouletteWheel {
+        width: 80%;
+        max-width: 500px;
+        height: auto;
+    }
+
+    @media (max-width: 768px) {
+        .objects-container { grid-template-columns: repeat(3, 1fr); }
+        .object-image { width: 28px; height: 28px; }
+    }
+
+    @media (max-width: 480px) {
+        .objects-container { grid-template-columns: repeat(2, 1fr); }
+    }
+</style>
+
+<script>
+
+    // =========================================================
+    // INITIALISATION
+    // =========================================================
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const loader = document.getElementById('simpleLoader');
+        if (loader) loader.classList.remove('hidden');
+        loadObjects();
+    });
+
+    // =========================================================
+    // GAME STATE
+    // =========================================================
+
+    let allObjects    = [];
+    let objects       = [];
+    let groups        = [];
+    let draggedItem   = null;
+    let currentSort   = 'doubles';
+    let highlightedGroups  = new Set();
+    let highlightedGroups2 = new Set();
+    let currentMode   = 'MA';
+    // let includeDex    = document.getElementById('DexToggle').checked;
+    // let includeDLC    = document.getElementById('DLCToggle').checked;
+    let groupSeparators = [];
+    let masterObjects = [];
+    let currentGroupValue;
+    let activeGenerations = [10];
+
+    // =========================================================
+    // CONSTANTS
+    // =========================================================
+
+    const TYPE_LIST = [
+        'Normal','Fire','Water','Electric','Grass','Ice',
+        'Fighting','Poison','Ground','Flying','Psychic','Bug',
+        'Rock','Ghost','Dragon','Dark','Steel','Fairy',
+    ];
+
+    const GENERATIONS = [
+        { id: 1,  name: 'Red / Blue',       source: 'Gen1Tier'      },
+        { id: 2,  name: 'Gold / Silver',     source: 'Gen2Tier'      },
+        { id: 3,  name: 'Ruby / Sapphire',   source: 'Gen3Tier'      },
+        { id: 4,  name: 'Diamond / Pearl',   source: 'Gen4Tier'      },
+        { id: 5,  name: 'Black / White',     source: 'Gen5Tier'      },
+        { id: 6,  name: 'X / Y',             source: 'Gen6Tier'      },
+        { id: 7,  name: 'Sun / Moon',        source: 'Gen7Tier'      },
+        { id: 8,  name: 'Sword / Shield',    source: 'Gen8Tier'      },
+        { id: 9,  name: 'Scarlet / Violet',  source: 'Gen9Tier'      },
+        { id: 10, name: 'Champions',         source: 'ChampionsTier' },
+    ];
+
+    const GENERATION_MODES = {
+        1:  ['OU','Uber','UU','RU','NU','PU','ZU','LC'],
+        2:  ['OU','Uber','UU','RU','NU','PU','ZU','LC'],
+        3:  ['OU','Uber','UU','RU','NU','PU','ZU','LC'],
+        4:  ['OU','Uber','UU','RU','NU','PU','ZU','LC'],
+        5:  ['OU','Uber','UU','RU','NU','PU','ZU','LC'],
+        6:  ['OU','Uber','UU','RU','NU','PU','ZU','LC'],
+        7:  ['OU','Uber','UU','RU','NU','PU','ZU','LC'],
+        8:  ['OU','Uber','UU','RU','NU','PU','ZU','LC'],
+        9:  ['OU','Uber','UU','RU','NU','PU','ZU','LC'],
+        10: ['MA'],
+    };
+
+    const MODE_NAMES = {
+        OU: 'OU', Uber: 'Uber', UU: 'UU', RU: 'RU',
+        NU: 'NU', PU: 'PU', ZU: 'ZU', LC: 'LC', MA: 'MA',
+    };
+
+    const MODE_ORDER = {
+        AG: '1', Uber: '2', OU: '3', UUBL: '4', UU: '5', RUBL: '6', RU: '7',
+        NUBL: '8', NU: '9', PUBL: '10', PU: '11', ZUBL: '12', ZU: '13', NFE: '14', LC: '15',
+        MA: '16'
+    };
+
+    const USAGE_ORDER = { 'Meta': 0, 'Viable': 1, 'Niche': 2, 'Unused': 3 };
+
+    const typeColours = {
+        'Normal':   '#9099a1', 'Fire':     '#ff9c54', 'Water':    '#4d90d5',
+        'Electric': '#f3d23b', 'Grass':    '#63bb5b', 'Ice':      '#74cec0',
+        'Fighting': '#d3416b', 'Poison':   '#ab6ac8', 'Ground':   '#d97746',
+        'Flying':   '#8fa8dd', 'Psychic':  '#f97176', 'Bug':      '#90c12c',
+        'Rock':     '#cbbb8e', 'Ghost':    '#556cad', 'Dragon':   '#0a71cc',
+        'Dark':     '#5a5366', 'Steel':    '#5a8ea1', 'Fairy':    '#ec8fe6',
+    };
+
+    // =========================================================
+    // FILTERS
+    // Rarity tiers: common | rare | unique | curse
+    // Each filter needs:
+    //   name        – display name shown in the spin result message
+    //   description – short description
+    //   init()      – called once when the filter is selected; returns
+    //                 a function (obj) => bool that decides whether to
+    //                 KEEP the Pokémon (true = keep, false = remove)
+    // =========================================================
+
+    const FILTER_CONFIG = {
+        rarityChances: {
+            common: 5,
+            rare:    3,
+            unique:  1,
+            curse:   1,
+        }
+    };
+
+    // ---- helpers used by multiple filters ----
+
+    function pickRandom(arr, count) {
+        // Return `count` unique random elements from arr
+        const shuffled = [...arr].sort(() => Math.random() - 0.5);
+        return shuffled.slice(0, Math.min(count, arr.length));
+    }
+
+    function randInt(min, max) {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    function randFloat(min, max, dp = 1) {
+        return parseFloat((Math.random() * (max - min) + min).toFixed(dp));
+    }
+
+    const ALL_TYPES = [
+        'Normal','Fire','Water','Electric','Grass','Ice',
+        'Fighting','Poison','Ground','Flying','Psychic','Bug',
+        'Rock','Ghost','Dragon','Dark','Steel','Fairy',
+    ];
+
+    const ALL_LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+
+    const ALL_COLOURS = ['Red','Blue','Yellow','Green','Black','Brown','Purple','Gray','White','Pink'];
+    const ALL_SHAPES  = [
+        'Arms','Biped','Fins','Head','Hexapod','Insectoid','Legs',
+        'Lump','Multiple','Quadruped','Serpentine','Tail','Tentacles', 'Wings',
+    ];
+    const ALL_EGG_GROUPS = [
+        'Monster','Water 1','Bug','Flying','Field','Fairy','Grass',
+        'Human-Like','Water 3','Mineral','Amorphous','Water 2','Ditto',
+        'Dragon','Undiscovered',
+    ];
+
+    // Generation id → friendly region name (for display in messages)
+    const REGION_NAMES = {
+        1: 'Kanto', 2: 'Johto', 3: 'Hoenn', 4: 'Sinnoh',
+        5: 'Unova', 6: 'Kalos', 7: 'Alola', 8: 'Galar',
+        9: 'Paldea', 10: 'Champions',
+    };
+
+    const FILTERS = {
+
+        // =============================================================
+        // COMMON — highly variable, different subset each roll
+        // =============================================================
+        common: [
+
+            {
+                name: 'Random Cull',
+                init() {
+                    // Remove between 10 % and 75 % of the pool at random
+                    const keepChance = 0.25 + Math.random() * 0.65;
+                    return (obj) => Math.random() < keepChance;
+                },
+                describe() { return 'A random portion of Pokémon have been removed from the pool.'; },
+            },
+
+            {
+                name: 'Allow Type',
+                init() {
+                    const count = randInt(1, 3);
+                    const allowed = pickRandom(ALL_TYPES, count);
+                    this._desc = `Only Pokémon with at least one of these types remain: ${allowed.join(', ')}.`;
+                    return (obj) => obj.types.some(t => allowed.includes(t));
+                },
+                describe() { return this._desc; },
+            },
+
+            {
+                name: 'Ban Type',
+                init() {
+                    const count = randInt(1, 3);
+                    const banned = pickRandom(ALL_TYPES, count);
+                    this._desc = `Pokémon with any of these types have been removed: ${banned.join(', ')}.`;
+                    return (obj) => !obj.types.some(t => banned.includes(t));
+                },
+                describe() { return this._desc; },
+            },
+
+            {
+                name: 'Allow Alphabetical',
+                init() {
+                    const count = randInt(1, 5);
+                    const letters = pickRandom(ALL_LETTERS, count);
+                    this._desc = `Only Pokémon whose names begin with: ${letters.sort().join(', ')}.`;
+                    return (obj) => letters.includes(obj.name[0].toUpperCase());
+                },
+                describe() { return this._desc; },
+            },
+
+            {
+                name: 'Ban Alphabetical',
+                init() {
+                    const count = randInt(1, 5);
+                    const letters = pickRandom(ALL_LETTERS, count);
+                    this._desc = `Pokémon whose names begin with ${letters.sort().join(', ')} have been removed.`;
+                    return (obj) => !letters.includes(obj.name[0].toUpperCase());
+                },
+                describe() { return this._desc; },
+            },
+
+            {
+                name: 'Allow Region',
+                init() {
+                    const count = randInt(1, 3);
+                    const genIds = pickRandom(Object.keys(REGION_NAMES).map(Number), count);
+                    const names  = genIds.map(id => REGION_NAMES[id]);
+                    this._desc = `Only Pokémon originally from: ${names.join(', ')}.`;
+                    return (obj) => obj.primaryGeneration.some(g => genIds.includes(g));
+                },
+                describe() { return this._desc; },
+            },
+
+            {
+                name: 'Ban Region',
+                init() {
+                    const count = randInt(1, 3);
+                    const genIds = pickRandom(Object.keys(REGION_NAMES).map(Number), count);
+                    const names  = genIds.map(id => REGION_NAMES[id]);
+                    this._desc = `Pokémon originally from ${names.join(', ')} have been removed.`;
+                    return (obj) => !obj.generations.some(g => genIds.includes(g));
+                },
+                describe() { return this._desc; },
+            },
+
+            {
+                name: 'Allow Colour',
+                init() {
+                    const count   = randInt(1, 3);
+                    const allowed = pickRandom(ALL_COLOURS, count);
+                    this._desc = `Only ${allowed.join(', ')}-coloured Pokémon remain.`;
+                    return (obj) => allowed.includes(obj.colour);
+                },
+                describe() { return this._desc; },
+            },
+
+            {
+                name: 'Ban Colour',
+                init() {
+                    const count  = randInt(1, 3);
+                    const banned = pickRandom(ALL_COLOURS, count);
+                    this._desc = `${banned.join(', ')}-coloured Pokémon have been removed.`;
+                    return (obj) => !banned.includes(obj.colour);
+                },
+                describe() { return this._desc; },
+            },
+
+            {
+                name: 'Allow Move',
+                init() {
+                    // Build the prefix string for the active generation (e.g. '9' matches '9L', '9M', etc.)
+                    const genPrefix = String(activeGenerations[0]);
+
+                    // Collect all moves learnable in this generation across the current pool
+                    const poolMoves = [...new Set(
+                        objects.flatMap(o =>
+                            Object.entries(o.learnset)
+                                .filter(([, sources]) => sources.some(s => s.startsWith(genPrefix)))
+                                .map(([move]) => move)
+                        )
+                    )];
+
+                    // Fall back to any move in the learnset if none match the generation
+                    const movesToPickFrom = poolMoves.length > 0
+                        ? poolMoves
+                        : [...new Set(objects.flatMap(o => Object.keys(o.learnset)))];
+
+                    const count   = randInt(1, 3);
+                    const allowed = pickRandom(movesToPickFrom, count);
+
+                    this._desc = `Only Pokémon that can learn ${allowed.join(' or ')} remain.`;
+
+                    return (obj) => allowed.some(move => {
+                        const sources = obj.learnset[move];
+                        if (!sources) return false;
+                        return sources.some(s => s.startsWith(genPrefix));
+                    });
+                },
+                describe() { return this._desc; },
+            },
+
+            {
+                name: 'Ban Move',
+                init() {
+                    const genPrefix = String(activeGenerations[0]);
+
+                    const poolMoves = [...new Set(
+                        objects.flatMap(o =>
+                            Object.entries(o.learnset)
+                                .filter(([, sources]) => sources.some(s => s.startsWith(genPrefix)))
+                                .map(([move]) => move)
+                        )
+                    )];
+
+                    const movesToPickFrom = poolMoves.length > 0
+                        ? poolMoves
+                        : [...new Set(objects.flatMap(o => Object.keys(o.learnset)))];
+
+                    const count  = randInt(1, 3);
+                    const banned = pickRandom(movesToPickFrom, count);
+
+                    this._desc = `Pokémon that can learn ${banned.join(' or ')} have been removed.`;
+
+                    return (obj) => !banned.some(move => {
+                        const sources = obj.learnset[move];
+                        if (!sources) return false;
+                        return sources.some(s => s.startsWith(genPrefix));
+                    });
+                },
+                describe() { return this._desc; },
+            },
+
+            {
+                name: 'Allow Shape',
+                init() {
+                    const count   = randInt(1, 3);
+                    const allowed = pickRandom(ALL_SHAPES, count);
+                    this._desc = `Only Pokémon with a ${allowed.join(' or ')} body shape remain.`;
+                    return (obj) => allowed.includes(obj.shape);
+                },
+                describe() { return this._desc; },
+            },
+
+            {
+                name: 'Ban Shape',
+                init() {
+                    const count  = randInt(1, 3);
+                    const banned = pickRandom(ALL_SHAPES, count);
+                    this._desc = `Pokémon with a ${banned.join(' or ')} body shape have been removed.`;
+                    return (obj) => !banned.includes(obj.shape);
+                },
+                describe() { return this._desc; },
+            },
+        ],
+
+        // =============================================================
+        // RARE — stat/mechanic based; same Pokémon tend to cluster
+        // =============================================================
+        rare: [
+
+            {
+                name: 'Allow Large',
+                init() {
+                    const threshold = randFloat(0.5, 2.5);
+                    this._desc = `Only Pokémon taller than ${threshold} m remain.`;
+                    return (obj) => obj.height > threshold;
+                },
+                describe() { return this._desc; },
+            },
+
+            {
+                name: 'Allow Short',
+                init() {
+                    const threshold = randFloat(0.5, 2.5);
+                    this._desc = `Only Pokémon shorter than ${threshold} m remain.`;
+                    return (obj) => obj.height < threshold;
+                },
+                describe() { return this._desc; },
+            },
+
+            {
+                name: 'Allow Heavy',
+                init() {
+                    const threshold = randFloat(5, 300);
+                    this._desc = `Only Pokémon heavier than ${threshold} kg remain.`;
+                    return (obj) => obj.weight > threshold;
+                },
+                describe() { return this._desc; },
+            },
+
+            {
+                name: 'Allow Light',
+                init() {
+                    const threshold = randFloat(5, 300);
+                    this._desc = `Only Pokémon lighter than ${threshold} kg remain.`;
+                    return (obj) => obj.weight < threshold;
+                },
+                describe() { return this._desc; },
+            },
+
+            {
+                name: 'Allow Weakness',
+                init() {
+                    const count   = randInt(1, 3);
+                    const allowed = pickRandom(ALL_TYPES, count);
+                    this._desc = `Only Pokémon weak to ${allowed.join(' or ')} remain.`;
+                    return (obj) => obj.weaknesses.some(w => allowed.includes(w));
+                },
+                describe() { return this._desc; },
+            },
+
+            {
+                name: 'Ban Weakness',
+                init() {
+                    const count  = randInt(1, 3);
+                    const banned = pickRandom(ALL_TYPES, count);
+                    this._desc = `Pokémon weak to ${banned.join(' or ')} have been removed.`;
+                    return (obj) => !obj.weaknesses.some(w => banned.includes(w));
+                },
+                describe() { return this._desc; },
+            },
+
+            {
+                name: 'Allow Resistance',
+                init() {
+                    const count   = randInt(1, 3);
+                    const allowed = pickRandom(ALL_TYPES, count);
+                    this._desc = `Only Pokémon that resist ${allowed.join(' or ')} remain.`;
+                    return (obj) => obj.resistances.some(r => allowed.includes(r));
+                },
+                describe() { return this._desc; },
+            },
+
+            {
+                name: 'Ban Resistance',
+                init() {
+                    const count  = randInt(1, 3);
+                    const banned = pickRandom(ALL_TYPES, count);
+                    this._desc = `Pokémon that resist ${banned.join(' or ')} have been removed.`;
+                    return (obj) => !obj.resistances.some(r => banned.includes(r));
+                },
+                describe() { return this._desc; },
+            },
+
+            {
+                name: 'Allow Ability',
+                init() {
+                    // Pick 1–2 random abilities from the current pool at init time
+                    const poolAbilities = [...new Set(
+                        objects.flatMap(o => o.abilities).filter(Boolean)
+                    )];
+                    const count   = randInt(1, 5);
+                    const allowed = pickRandom(poolAbilities, count);
+                    this._desc = `Only Pokémon with the ${allowed.join(' or ')} ability remain.`;
+                    return (obj) => obj.abilities.some(a => allowed.includes(a));
+                },
+                describe() { return this._desc; },
+            },
+
+            {
+                name: 'Ban Ability',
+                init() {
+                    const poolAbilities = [...new Set(
+                        objects.flatMap(o => o.abilities).filter(Boolean)
+                    )];
+                    const count  = randInt(1, 5);
+                    const banned = pickRandom(poolAbilities, count);
+                    this._desc = `Pokémon with the ${banned.join(' or ')} ability have been removed.`;
+                    return (obj) => !obj.abilities.some(a => banned.includes(a));
+                },
+                describe() { return this._desc; },
+            },
+
+            {
+                name: 'Allow Egg Group',
+                init() {
+                    const count   = randInt(1, 4);
+                    const allowed = pickRandom(ALL_EGG_GROUPS, count);
+                    this._desc = `Only Pokémon in the ${allowed.join(' or ')} egg group(s) remain.`;
+                    return (obj) => obj.egggroups.some(e => allowed.includes(e));
+                },
+                describe() { return this._desc; },
+            },
+
+            {
+                name: 'Ban Egg Group',
+                init() {
+                    const count  = randInt(1, 4);
+                    const banned = pickRandom(ALL_EGG_GROUPS, count);
+                    this._desc = `Pokémon in the ${banned.join(' or ')} egg group(s) have been removed.`;
+                    return (obj) => !obj.egggroups.some(e => banned.includes(e));
+                },
+                describe() { return this._desc; },
+            },
+        ],
+
+        // =============================================================
+        // UNIQUE — hard-coded bespoke sets; same result every time
+        // =============================================================
+        unique: [
+
+            {
+                name: 'Middle Cup',
+                description: 'Only the middle children — Pokémon that have both evolved and can still evolve.',
+                init() {
+                    return (obj) => obj.canEvolve && obj.hasEvolved;
+                },
+            },
+
+            {
+                name: 'Worthless Cup',
+                description: 'Only Pokémon with a Base Stat Total below 250.',
+                init() {
+                    return (obj) => obj.BST < 251;
+                },
+            },
+
+            {
+                name: 'Newcomer Cup',
+                description: 'Only Pokémon native to Paldea.',
+                init() {
+                    return (obj) => obj.generations.includes(9);
+                },
+            },
+
+            {
+                name: 'Boulder Cup',
+                description: 'Rocks and their defensive brethren — Rock-types and Pokémon whose highest stat is Defence.',
+                init() {
+                    return (obj) => {
+                        if (obj.types.includes('Rock')) return true;
+                        const stats = [obj.baseHP, obj.baseAtk, obj.baseDef, obj.baseSpA, obj.baseSpD, obj.baseSpe];
+                        return obj.baseDef === Math.max(...stats);
+                    };
+                },
+            },
+
+            {
+                name: 'Sorceror Cup',
+                description: 'Channel the power within.',
+                init() {
+                    return (obj) => {
+                        if (obj.types.includes('Psychic')) return true;
+                        const stats = [obj.baseHP, obj.baseAtk, obj.baseDef, obj.baseSpA, obj.baseSpD, obj.baseSpe];
+                        return obj.baseSpA === Math.max(...stats);
+                    };
+                },
+            },
+
+            {
+                name: 'Mercurius Cup',
+                description: 'Fleet-footed Travellers.',
+                init() {
+                    return (obj) => {
+                        if (obj.types.includes('Flying')) return true;
+                        const stats = [obj.baseHP, obj.baseAtk, obj.baseDef, obj.baseSpA, obj.baseSpD, obj.baseSpe];
+                        return obj.baseSpe === Math.max(...stats);
+                    };
+                },
+            },
+
+            {
+                name: 'Boring Cup',
+                description: 'Only the most vanilla Pokémon remain — Normal, Fighting, Flying, Bug, and Grass types exclusively.',
+                init() {
+                    const BANNED_TYPES = new Set([
+                        'Fire','Water','Dragon','Steel','Ground','Rock',
+                        'Fairy','Psychic','Dark','Ghost','Poison','Electric','Ice',
+                    ]);
+                    return (obj) => !obj.types.some(t => BANNED_TYPES.has(t));
+                },
+            },
+
+            {
+                name: 'Tempest Cup',
+                description: 'Only Pokémon that can learn Hurricane or Thunder, or that have Swift Swim.',
+                init() {
+                    return (obj) => {
+                        if (obj.abilities.includes('Swift Swim')) return true;
+                        return ['hurricane', 'thunder'].some(move => move in obj.learnset);
+                    };
+                },
+            },
+
+            {
+                name: 'Catacomb Cup',
+                description: 'The ancients, preserved in time.',
+                init() {
+                    return (obj) => {
+                        if (obj.abilities.includes('Protosynthesis')) return true;
+                        return ['ancientpower'].some(move => move in obj.learnset);
+                    };
+                },
+            },
+
+            {
+                name: 'Marsh Cup',
+                description: 'The denizens of the swamp.',
+                init() {
+                    return (obj) => {
+                        if (obj.types.includes('Ground')) return true;
+                        return ['muddywater','mudshot','mudbomb'].some(move => move in obj.learnset);
+                    };
+                },
+            },
+
+            {
+                name: 'Kingdom Cup',
+                description: 'Human-Like and Field egg group Pokémon, plus Steel-types — the rulers and their knights.',
+                init() {
+                    const ALLOWED_EGGS = new Set(['Human-Like', 'Field']);
+                    return (obj) =>
+                        obj.egggroups.some(e => ALLOWED_EGGS.has(e)) ||
+                        obj.types.includes('Steel');
+                },
+            },
+
+            {
+                name: 'Lullaby Cup',
+                description: 'Only Pokémon that can learn a sleep-inducing move: Spore, Sleep Powder, Sing, Hypnosis, or Grass Whistle.',
+                init() {
+                    const SLEEP_MOVES = ['spore', 'sleeppowder', 'sing', 'hypnosis', 'grasswhistle'];
+                    return (obj) => SLEEP_MOVES.some(move => move in obj.learnset);
+                },
+            },
+
+            {
+                name: 'Rainbow Cup',
+                description: 'Only colourful Pokémon — Blue, Green, Red, Yellow, or Purple — that are not Normal, Fighting, Flying, Ground, Dark, Ghost, or Steel type.',
+                init() {
+                    const ALLOWED_COLOURS = new Set(['Blue','Green','Red','Yellow','Purple']);
+                    const BANNED_TYPES    = new Set(['Normal','Fighting','Flying','Ground','Dark','Ghost','Steel']);
+                    return (obj) =>
+                        ALLOWED_COLOURS.has(obj.colour) &&
+                        !obj.types.some(t => BANNED_TYPES.has(t));
+                },
+            },
+
+            {
+                name: 'Jungle Cup',
+                description: 'Denizens of the Mighty Jungle',
+                init() {
+                    const ALLOWED_EGGS = new Set(['Grass','Bug']);
+                    const ALLOWED_COLOURS  = new Set(['Green']);
+                    const ALLOWED_MOVES = ['grassyterrain','vinewhip','howl','moonlight']
+                    return (obj) =>
+                        obj.egggroups.some(e => ALLOWED_EGGS.has(e)) ||
+                        ALLOWED_COLOURS.has(obj.colour) ||
+                        ALLOWED_MOVES.some(move => move in obj.learnset);
+                },
+            },
+
+            {
+                name: 'Nightfall Cup',
+                description: 'The Darkness Returns to the Lands',
+                init() {
+                    const BANNED_EGGS = new Set(['Field','Water 1','Water 2','Water 3']);
+                    const ALLOWED_COLOURS  = new Set(['Black']);
+                    const ALLOWED_TYPES = ['Ghost','Dark','Ice'];
+                    return (obj) =>
+                        !obj.egggroups.some(e => BANNED_EGGS.has(e)) &&
+                        ((ALLOWED_COLOURS.has(obj.colour) ||
+                        obj.types.some(t => ALLOWED_TYPES.has(t))));
+                },
+            },
+
+            {
+                name: 'Ferocious Cup',
+                description: 'Gentle souls are expelled — Grass, Fairy, and Human-Like egg groups are banned, as are Pokémon that can learn Ice Punch, Fire Punch, Thunder Punch, or Focus Punch.',
+                init() {
+                    const BANNED_EGGS  = new Set(['Grass','Fairy','Human-Like']);
+                    const BANNED_MOVES = ['icepunch','firepunch','thunderpunch','focuspunch'];
+                    return (obj) => {
+                        if (obj.egggroups.some(e => BANNED_EGGS.has(e))) return false;
+                        if (BANNED_MOVES.some(move => move in obj.learnset)) return false;
+                        return true;
+                    };
+                },
+            },
+
+            {
+                name: 'Retro Cup',
+                description: 'Get these new types out of my sight.',
+                init() {
+                    const BANNED_TYPES  = new Set(['Dark','Steel','Fairy']);
+                    const BANNED_REGIONS = ['Alola','Galar','Paldea'];
+                    return (obj) => {
+                        !obj.types.some(t => BANNED_TYPES.has(t)) &&
+                        !obj.generations.includes(7) &&
+                        !obj.generations.includes(8) &&
+                        !obj.generations.includes(9);
+                    };
+                },
+            },
+
+            {
+                name: 'Guardian Cup',
+                description: 'Mountains & Molehills.',
+                init() {
+                    return (obj) => {
+                        if (obj.types.includes('Steel')) return true;
+                        if (obj.baseHP > obj.baseSpe && obj.baseDef > obj.baseAtk && obj.baseSpD > obj.baseSpA) return true;
+                    };
+                },
+            },
+
+            {
+                name: 'Overlord Cup',
+                description: 'The Mighty Rule.',
+                init() {
+                    return (obj) => {
+                        if (obj.types.includes('Fire')) return true;
+                        if (obj.types.includes('Dragon')) return true;
+                        if (obj.BST > 599) return true;
+                    };
+                },
+            },
+
+            {
+                name: 'Timeless Cup',
+                description: 'Only the chosen ones — starter Pokémon and their evolutions.',
+                init() {
+                    const STARTERS = new Set([
+                        // Gen 1
+                        'Bulbasaur','Ivysaur','Venusaur','Venusaur-Mega',
+                        'Charmander','Charmeleon','Charizard','Charizard-Mega-X','Charizard-Mega-Y',
+                        'Squirtle','Wartortle','Blastoise','Blastoise-Mega',
+                        'Pichu','Pikachu','Raichu','Raichu-Alola',
+                        // Gen 2
+                        'Chikorita','Bayleef','Meganium','Meganium-Mega',
+                        'Cyndaquil','Quilava','Typhlosion','Typhlosion-Hisui',
+                        'Totodile','Croconaw','Feraligatr','Feraligatr-Mega',
+                        // Gen 3
+                        'Treecko','Grovyle','Sceptile','Sceptile-Mega',
+                        'Torchic','Combusken','Blaziken','Blaziken-Mega',
+                        'Mudkip','Marshtomp','Swampert','Swampert-Mega',
+                        // Gen 4
+                        'Turtwig','Grotle','Torterra',
+                        'Chimchar','Monferno','Infernape',
+                        'Piplup','Prinplup','Empoleon',
+                        // Gen 5
+                        'Snivy','Servine','Serperior',
+                        'Tepig','Pignite','Emboar','Emboar-Mega',
+                        'Oshawott','Dewott','Samurott','Samurott-Hisui',
+                        // Gen 6
+                        'Chespin','Quilladin','Chesnaught','Chesnaught-Mega',
+                        'Fennekin','Braixen','Delphox','Delphox-Mega',
+                        'Froakie','Frogadier','Greninja','Greninja-Bond','Greninja-Mega',
+                        // Gen 7
+                        'Rowlet','Dartrix','Decidueye','Decidueye-Hisui',
+                        'Litten','Torracat','Incineroar',
+                        'Popplio','Brionne','Primarina',
+                        // Gen 8
+                        'Grookey','Thwackey','Rillaboom',
+                        'Scorbunny','Raboot','Cinderace',
+                        'Sobble','Drizzile','Inteleon',
+                        // Gen 9
+                        'Sprigatito','Floragato','Meowscarada',
+                        'Fuecoco','Crocalor','Skeledirge',
+                        'Quaxly','Quaxwell','Quaquaval',
+                    ]);
+                    return (obj) => STARTERS.has(obj.name);
+                },
+            },
+            {
+                name: 'Mascot',
+                description: 'The faces of the francise.',
+                init() {
+                    const MASCOTS = new Set([
+                        // Pikachus
+                        'Pichu','Pikachu','Raichu','Raichu-Alola',
+                        'Azurill','Marill','Azumarill',
+                        'Plusle','Minun','Pachirisu',
+                        'Emolga', 'Dedenne', 'Togedemaru','Mimikyu',
+                        'Morpeko','Pawmi','Pawmo','Pawmot',
+
+                        //Eevees
+                        'Eevee', 'Jolteon', 'Flareon', 'Vaporeon',
+                        'Umbreon','Espeon','Leafeon','Glaceon','Sylveon',
+                        'Incineroar',
+                    ]);
+                    return (obj) => MASCOTS.has(obj.name);
+                },
+            },
+            {
+                name: 'Thorn Cup',
+                description: 'Do not touch these roses.',
+                init() {
+                    return (obj) => {
+                        if (obj.abilities.includes('Poison Point') || obj.abilities.includes('Effect Spore') || obj.abilities.includes('Static') || obj.abilities.includes('Iron Barbs') || obj.abilities.includes('Flame Body') || obj.abilities.includes('Rough Skin')) return true;
+                        if (obj.types.includes('Grass')) return true;
+                    };
+                },
+            },
+            {
+                name: 'Hazardous Cup',
+                description: 'Do not touch these roses.',
+                init() {
+                    const ALLOWED_MOVES  = ['spikes','toxicspikes','stealthrock','stickyweb','ceaselessedge'];
+                    const BANNED_MOVES = ['defog','rapidspin','courtchange'];
+                    return (obj) => {
+                        if (BANNED_MOVES.some(move => move in obj.learnset)) return false;
+                        if (ALLOWED_MOVES.some(move => move in obj.learnset)) return true;
+                    };
+                },
+            },
+        ],
+
+        // =============================================================
+        // CURSE — ongoing honour rules; may also filter the pool
+        // isCurse: true      → banner only, no pool removal
+        // filterAndCurse: true → pool removal + banner
+        // =============================================================
+        curse: [
+
+            {
+                name: 'Tag-team Curse',
+                description: 'You can only switch between Pokémon that share a type.',
+                isCurse: true,
+            },
+
+            {
+                name: 'Status Curse',
+                description: 'You may only use Status moves.',
+                isCurse: true,
+            },
+
+            {
+                name: 'Metronome Curse',
+                description: 'All of your Pokémon must know metronome. Pokémon that cannot learn Metronome have been removed from the pool.',
+                filterAndCurse: true,
+                init() {
+                    return (obj) => 'metronome' in obj.learnset;
+                },
+            },
+
+            {
+                name: 'Blood Curse',
+                description: 'Forfeit when any of your Pokémon faint.',
+                isCurse: true,
+            },
+
+            {
+                name: 'Loss Curse',
+                description: 'The player that loses wins.',
+                isCurse: true,
+            },
+
+            {
+                name: 'Natural Curse',
+                description: 'Only Level-Up Moves are Legal.',
+                isCurse: true,
+            },
+
+            {
+                name: 'Stab Curse',
+                description: 'Only moves that match the users type are legal.',
+                isCurse: true,
+            },
+
+            {
+                name: 'Berry Curse',
+                description: 'All Pokémon must hold berries.',
+                isCurse: true,
+            },
+
+            {
+                name: 'Contact Curse',
+                description: 'Only contact moves are allowed.',
+                isCurse: true,
+            },
+
+            {
+                name: 'Sparkle Curse',
+                description: 'You may only use shiny Pokémon.',
+                isCurse: true,
+            },
+
+            {
+                name: 'Labyrinth Curse',
+                description: 'You may not use Pokémon that share a type.',
+                isCurse: true,
+            },
+
+            {
+                name: 'Pseudonym Curse',
+                description: 'You may only use moves that share a letter with a Pokémon\'s nickname.',
+                isCurse: true,
+            },
+
+            {
+                name: 'Consumption Curse',
+                description: 'All your Pokémon must hold consumable items.',
+                isCurse: true,
+            },
+
+            {
+                name: 'Casual Curse',
+                description: 'You may not use legendary or mythical Pokémon.',
+                isCurse: true,
+            },
+            {
+                name: 'Mirror Curse',
+                description: 'Both players must use the same Pokémon.',
+                isCurse: true,
+            },
+            {
+                name: 'Solo Curse',
+                description: 'Bring six Pokémon, one to battle.',
+                isCurse: true,
+            },
+            {
+                name: 'Voyager Curse',
+                description: 'All Pokémon must be from different regions.',
+                isCurse: true,
+            },
+        ],
+    };
+
+    // =========================================================
+    // DATA LOADING
+    // =========================================================
+
+    async function loadObjects() {
+        try {
+            const url = "{% static 'json/pokedata.json' %}";
+            const response = await fetch(url);
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+            const data = await response.json();
+            allObjects = [];
+
+            for (const [key, obj] of Object.entries(data)) {
+                const generationValues = {};
+                GENERATIONS.forEach(gen => {
+                    generationValues[`generation${gen.id}`] = obj[gen.source] || 0;
+                });
+
+                const generations = [];
+                GENERATIONS.forEach(gen => {
+                    if (generationValues[`generation${gen.id}`] != 0) generations.push(gen.id);
+                });
+
+                const types = [];
+                if (obj.type1) types.push(obj.type1);
+                if (obj.type2) types.push(obj.type2);
+
+                const weaknesses = [
+                    ...(obj.x2Eff || []),
+                    ...(obj.x4Eff || []),
+                ];
+
+                const resistances = [
+                    ...(obj.x05Eff  || []),
+                    ...(obj.x025Eff || []),
+                    ...(obj.x0Eff   || []),
+                ];
+
+                const immunities = [...(obj.x0Eff || [])];
+                const abilities  = [obj.ability1, obj.ability2, obj.abilityh];
+                const egggroups  = [obj.eggGroup1, obj.eggGroup2];
+
+                const newObj = {
+                    id:               `obj-${obj.id || key}`,
+                    name:             obj.name || key,
+                    key,
+                    filename:         obj.filename || 'default',
+                    number:           parseInt(obj.num)          || 0,
+                    generations,
+                    primaryGeneration: generations[0]            || 1,
+                    types,
+                    weaknesses,
+                    resistances,
+                    x2Eff:            obj.x2Eff  || [],
+                    x4Eff:            obj.x4Eff  || [],
+                    abilities,
+                    egggroups,
+                    baseHP:           parseInt(obj.baseHP)       || 0,
+                    baseAtk:          parseInt(obj.baseAtk)      || 0,
+                    baseDef:          parseInt(obj.baseDef)      || 0,
+                    baseSpA:          parseInt(obj.baseSpA)      || 0,
+                    baseSpD:          parseInt(obj.baseSpD)      || 0,
+                    baseSpe:          parseInt(obj.baseSpe)      || 0,
+                    BST:              parseInt(obj.BST)           || 0,
+                    height:           parseFloat(obj.heightm)    || 0,
+                    weight:           parseFloat(obj.weightkg)   || 0,
+                    colour:           obj.color                  || 'noColour',
+                    shape:            obj.shape                  || 'noShape',
+                    isBase:           parseInt(obj.isindependent) === 1,
+                    baseSpecies:      obj.baseSpecies            || null,
+                    canEvolve:        parseInt(obj.evonum)       > 0,
+                    hasEvolved:       parseInt(obj.prevonum)     > 0,
+                    excludeValue:     parseInt(obj.evonum)       || 0,
+                    singlesusage:     obj.SinglesUsage          || 'Unranked',
+                    doublesusage:     obj.DoublesUsage          || 'Unranked',
+                    learnset:         obj.learnset || {},
+                    alternatives:     [],
+                    group:            null,
+                };
+
+                GENERATIONS.forEach(gen => {
+                    newObj[`generation${gen.id}`] = generationValues[`generation${gen.id}`];
+                });
+
+                allObjects.push(newObj);
+            }
+
+            // Link alternatives to their base objects
+            allObjects.forEach(obj => {
+                if (!obj.isBase && obj.baseSpecies) {
+                    const baseObj = allObjects.find(o => o.name === obj.baseSpecies);
+                    if (baseObj) {
+                        if (!baseObj.alternatives) baseObj.alternatives = [];
+                        baseObj.alternatives.push(obj);
+                    }
+                }
+            });
+
+            const baseObjects = allObjects.filter(obj => obj.isBase);
+            trueallObjects = allObjects;
+            allObjects = baseObjects;
+
+            // Build override map
+            window.overrideMap = new Map();
+
+            if (allObjects.length === 0) throw new Error('No base objects were loaded!');
+
+            initializeGame();
+            const loader = document.getElementById('simpleLoader');
+            if (loader) loader.classList.add('hidden');
+
+        } catch (error) {
+            console.error('Load error:', error);
+            const loader = document.getElementById('simpleLoader');
+            if (loader) loader.classList.add('hidden');
+            // showMessage(`Error loading object data: ${error.message}`, 'error');
+        }
+    }
+
+    // =========================================================
+    // GENERATION / MODE FILTERING
+    // =========================================================
+
+    function toggleGeneration(generationId) {
+        const checkbox = document.getElementById(`cat${generationId}Toggle`);
+        if (checkbox.checked) {
+            GENERATIONS.forEach(cat => {
+                if (cat.id !== generationId) {
+                    const other = document.getElementById(`cat${cat.id}Toggle`);
+                    if (other) other.checked = false;
+                }
+            });
+            activeGenerations = [generationId];
+        } else {
+            if (activeGenerations.length === 1 && activeGenerations[0] === generationId) {
+                checkbox.checked = true;
+                return;
+            }
+            activeGenerations = activeGenerations.filter(id => id !== generationId);
+        }
+        populateModeSelector();
+        applyGenerationFilter();
+    }
+
+    // function toggleDex() {
+    //     includeDex = document.getElementById('DexToggle').checked;
+    //     applyGenerationFilter();
+    //     renderGame();
+    // }
+
+    // function toggleDLC() {
+    //     includeDLC = document.getElementById('DLCToggle').checked;
+    //     applyGenerationFilter();
+    //     renderGame();
+    // }
+
+    function shouldIncludeObject(obj, activeCats) {
+        const has = (tier) => activeCats.some(catId => obj[`generation${catId}`] === tier);
+
+        const tiers = {
+            AG: has('AG'), Uber: has('Uber'), OU: has('OU'), UU: has('UU'),
+            RU: has('RU'), NU: has('NU'), PU: has('PU'), ZU: has('ZU'),
+            UUBL: has('UUBL'), RUBL: has('RUBL'), NUBL: has('NUBL'), PUBL: has('PUBL'), ZUBL: has('ZUBL'),
+            NFE: has('NFE'), LC: has('LC'), MA: has('MA'),
+        };
+
+        const modeIncludes = {
+            OU:   ['OU','UUBL','UU','RUBL','RU','NUBL','NU','PUBL','PU','ZUBL','ZU','NFE','LC'],
+            Uber: ['Uber','OU','UUBL','UU','RUBL','RU','NUBL','NU','PUBL','PU','ZUBL','ZU','NFE','LC'],
+            UU:   ['UU','RUBL','RU','NUBL','NU','PUBL','PU','ZUBL','ZU','NFE','LC'],
+            RU:   ['RU','NUBL','NU','PUBL','PU','ZUBL','ZU','NFE','LC'],
+            NU:   ['NU','PUBL','PU','ZUBL','ZU','NFE','LC'],
+            PU:   ['PU','ZUBL','ZU','NFE','LC'],
+            ZU:   ['ZU','NFE','LC'],
+            LC:   ['LC'],
+            MA:   ['MA'],
+        };
+
+        const allowed = modeIncludes[currentMode] || [];
+        if (allowed.some(t => tiers[t])) return true;
+
+        return false;
+    }
+
+    function applyGenerationFilter() {
+        const baseObjects = trueallObjects.filter(obj => obj.isBase);
+        const passingBaseIds = new Set();
+
+        baseObjects.forEach(base => {
+            if (activeGenerations.some(catId => base[`generation${catId}`] != 0))
+                passingBaseIds.add(base.id);
+        });
+
+        const objectsToInclude = [];
+
+        baseObjects.forEach(base => {
+            if (passingBaseIds.has(base.id))
+                objectsToInclude.push({ ...base, group: null });
+        });
+
+        // Promote alternatives whose base didn't pass
+        trueallObjects.forEach(obj => {
+            if (!obj.isBase) {
+                const baseObj = baseObjects.find(b => b.name === obj.baseSpecies);
+                if (baseObj && !shouldIncludeObject(baseObj, activeGenerations)) {
+                    if (shouldIncludeObject(obj, activeGenerations)) {
+                        objectsToInclude.push({
+                            ...obj,
+                            isBase: true,
+                            originalBase: obj.baseSpecies,
+                            alternatives: [],
+                            group: null,
+                        });
+                    }
+                }
+            }
+        });
+
+        objects = objectsToInclude
+            .filter(obj => shouldIncludeObject(obj, activeGenerations))
+            .map(obj => ({ ...obj, group: null }));
+
+        if (objects.length === 0) {
+            // showMessage('No objects match the filter criteria!', 'warning');
+            return;
+        }
+
+        masterObjects = objects.map(obj => ({ ...obj, group: null }));
+
+        groups = [{ id: 0, name: 'Group A', objects: [] }];
+
+        shuffleArray(objects);
+
+        document.getElementById('filteredCount').textContent =
+            `Showing ${objects.length} objects`;
+
+        renderGame();
+
+        const categoryNames = activeGenerations.map(id => `Cat ${id}`).join(', ');
+        // showMessage(`Loaded ${objects.length} objects from ${categoryNames}`, 'warning');
+    }
+
+    // =========================================================
+    // GAME INITIALISATION
+    // =========================================================
+
+    function initializeGame() {
+        renderGenerationToggles();
+        populateModeSelector();
+
+        activeGenerations = [10];
+        currentSort = 'doubles';
+        const sortSelect = document.getElementById('sortSelect');
+        if (sortSelect) sortSelect.value = 'doubles';
+
+        if (!loadGameState()) {
+            applyGenerationFilter();
+        } else {
+            renderGame();
+        }
+    }
+
+    function renderGame() {
+        renderObjectsPool();
+        renderGroups();
+    }
+
+    // =========================================================
+    // POOL RENDERING
+    // =========================================================
+
+    function renderObjectsPool() {
+        const poolContainer = document.getElementById('objectsPool');
+        poolContainer.innerHTML = '';
+
+        const unplacedObjects = objects.filter(obj => obj.group === null);
+        const sortedObjects   = sortObjects(unplacedObjects);
+
+        if (currentSort === 'tier' || currentSort === 'singles' || currentSort === 'doubles') {
+            poolContainer.classList.add('grouped');
+        } else {
+            poolContainer.classList.remove('grouped');
+        }
+
+        if (!groupSeparators || groupSeparators.length === 0) {
+            sortedObjects.forEach(obj => poolContainer.appendChild(createObjectCard(obj)));
+        } else {
+            currentGroupValue = undefined;
+            for (let i = 0; i < sortedObjects.length; i++) {
+                const obj = sortedObjects[i];
+                const groupValue = getCategoryValue(obj);
+
+                if (i === 0 || groupValue !== currentGroupValue) {
+                    if (i !== 0) {
+                        const separator = document.createElement('div');
+                        separator.className = 'group-separator';
+                        poolContainer.appendChild(separator);
+                    }
+
+                    const header = document.createElement('div');
+                    header.className = 'group-header';
+                    const count = sortedObjects.filter(o => getCategoryValue(o) === groupValue).length;
+                    header.textContent = `${groupValue !== null ? groupValue : 'Other'} (${count})`;
+                    poolContainer.appendChild(header);
+
+                    currentGroupValue = groupValue;
+                }
+
+                poolContainer.appendChild(createObjectCard(obj));
+            }
+        }
+
+        poolContainer.addEventListener('dragover', handleDragOver);
+        poolContainer.addEventListener('drop',     handlePoolDrop);
+        poolContainer.addEventListener('dragenter', handleDragEnter);
+        poolContainer.addEventListener('dragleave', handleDragLeave);
+    }
+
+    function getCategoryValue(obj) {
+        if (currentSort === 'singles') return obj.singlesusage || 'Unused';
+        if (currentSort === 'doubles') return obj.doublesusage || 'Unused';
+        const genId = activeGenerations[0];
+        return obj[`generation${genId}`] || '';
+    }
+
+    // =========================================================
+    // OBJECT CARD
+    // =========================================================
+
+    function createObjectCard(obj) {
+        const card = document.createElement('div');
+
+        let categoryClass = 'category-multi';
+        if (obj.generations.length === 1) categoryClass = `category-${obj.generations[0]}`;
+
+        card.className = `object-card ${categoryClass}`;
+        card.setAttribute('draggable', 'true');
+        card.setAttribute('data-object-id', obj.id);
+        card.setAttribute('data-group-id', obj.group !== null ? obj.group : 'pool');
+        card.setAttribute('data-object-name', obj.name);
+        card.setAttribute('data-object-generations', obj.generations);
+
+        if (obj.alternatives && obj.alternatives.length > 0)
+            card.setAttribute('data-has-alternatives', 'true');
+        if (!obj.isBase && obj.baseObject)
+            card.setAttribute('data-is-alternative', 'true');
+
+        const imageUrl = `/static/images/pokemonicons/${obj.filename}.png`;
+
+        const propertyDots = obj.types.slice(0, 2).map(prop =>
+            `<span class="property-dot"
+                   style="background: ${typeColours[prop] || '#95a5a6'}"
+                   title="${prop}"></span>`
+        ).join('');
+
+        let validAltCount = 0;
+        if (obj.alternatives) {
+            obj.alternatives.forEach(alt => {
+                if (shouldIncludeObject(alt, activeGenerations)) validAltCount = 1;
+            });
+        }
+
+        let switchingIcon = '';
+        if (obj.isBase && validAltCount > 0)
+            switchingIcon = `<span class="switching-icon" title="${validAltCount} alternative version(s) available">🔄</span>`;
+        if (!obj.isBase && obj.baseObject)
+            switchingIcon = `<span class="switching-icon" title="Switch back to base (${obj.baseObject.name})">🔄</span>`;
+
+        card.innerHTML = `
+            <img src="${imageUrl}"
+                 alt="${obj.name}"
+                 class="object-image"
+                 onerror="this.src='/static/images/icons/default.png'; this.onerror=null;"
+                 loading="lazy"
+                 title="${obj.name}">
+            <div class="property-dots">${propertyDots}</div>
+            ${switchingIcon}
+        `;
+
+        card.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            showContextMenu(e, obj);
+        });
+
+        card.addEventListener('dragstart', handleDragStart);
+        card.addEventListener('dragend',   handleDragEnd);
+
+        return card;
+    }
+
+    // =========================================================
+    // GROUP RENDERING
+    // =========================================================
+
+    function renderGroups() {
+        const groupsGrid = document.getElementById('groupsGrid');
+        groupsGrid.innerHTML = '';
+
+        groups.forEach(group => {
+            const groupObjects = objects.filter(obj => obj.group === group.id);
+
+            const groupDiv = document.createElement('div');
+            groupDiv.className = 'group';
+            groupDiv.setAttribute('data-group-id', group.id);
+
+            if (highlightedGroups.has(group.id))  groupDiv.classList.add('highlight');
+            if (highlightedGroups2.has(group.id)) groupDiv.classList.add('highlight2');
+
+            const objectsDiv = document.createElement('div');
+            objectsDiv.className = 'group-objects';
+            objectsDiv.setAttribute('data-group-id', group.id);
+
+            groupObjects.forEach(obj => objectsDiv.appendChild(createObjectCard(obj)));
+
+            objectsDiv.addEventListener('dragover',  handleDragOver);
+            objectsDiv.addEventListener('drop',      handleDrop);
+            objectsDiv.addEventListener('dragenter', handleDragEnter);
+            objectsDiv.addEventListener('dragleave', handleDragLeave);
+
+            groupDiv.appendChild(objectsDiv);
+
+            groupDiv.addEventListener('click', (e) => {
+                if (e.target.closest('.object-card')) return;
+                toggleGroupHighlight(group.id, true);
+            });
+
+            groupDiv.addEventListener('contextmenu', (e) => {
+                if (e.target.closest('.object-card')) return;
+                e.preventDefault();
+                toggleGroupHighlight2(group.id, true);
+            });
+
+            groupsGrid.appendChild(groupDiv);
+        });
+    }
+
+    // =========================================================
+    // DRAG & DROP
+    // =========================================================
+
+    function handleDragStart(e) {
+        draggedItem = this;
+        this.classList.add('dragging');
+        e.dataTransfer.setData('text/plain', this.dataset.objectId);
+        e.dataTransfer.setData('source-group', this.dataset.groupId);
+        e.dataTransfer.effectAllowed = 'move';
+    }
+
+    function handleDragEnd(e) {
+        this.classList.remove('dragging');
+        document.querySelectorAll('.group-objects').forEach(el =>
+            el.classList.remove('drag-over')
+        );
+    }
+
+    function handleDragOver(e) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+    }
+
+    function handleDragEnter(e) {
+        e.preventDefault();
+        this.classList.add('drag-valid');
+        this.classList.remove('drag-invalid');
+    }
+
+    function handleDragLeave(e) {
+        this.classList.remove('drag-over', 'drag-valid', 'drag-invalid');
+    }
+
+    function handleDrop(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        this.classList.remove('drag-over', 'drag-valid', 'drag-invalid');
+
+        const objectId      = e.dataTransfer.getData('text/plain');
+        const targetGroupId = parseInt(this.dataset.groupId);
+        const object        = objects.find(obj => obj.id === objectId);
+
+        if (!object) return;
+
+        object.group = targetGroupId;
+        renderGame();
+        saveGameState();
+        // showMessage(`Moved to ${String.fromCharCode(65 + targetGroupId)}`, 'warning');
+    }
+
+    function handlePoolDrop(e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const poolContainer = document.getElementById('objectsPool');
+        poolContainer.classList.remove('drag-over', 'drag-valid', 'drag-invalid');
+
+        const objectId = e.dataTransfer.getData('text/plain');
+        const object   = objects.find(obj => obj.id === objectId);
+        if (!object) return;
+
+        object.group = null;
+        renderGame();
+        saveGameState();
+        // showMessage('Pokémon returned to pool', 'warning');
+    }
+
+    function handlePoolDragEnter(e) {
+        e.preventDefault();
+        const poolContainer = document.getElementById('objectsPool');
+        poolContainer.classList.add('drag-valid');
+    }
+
+    function handlePoolDragLeave(e) {
+        const poolContainer = document.getElementById('objectsPool');
+        poolContainer.classList.remove('drag-over', 'drag-valid', 'drag-invalid');
+    }
+
+    // =========================================================
+    // HIGHLIGHTS
+    // =========================================================
+
+    function toggleGroupHighlight(groupId, multiSelect = false) {
+        if (!multiSelect) { highlightedGroups.clear(); }
+
+        if (highlightedGroups2.has(groupId)) highlightedGroups2.delete(groupId);
+
+        if (highlightedGroups.has(groupId)) {
+            highlightedGroups.delete(groupId);
+        } else {
+            highlightedGroups.add(groupId);
+        }
+        renderGame();
+    }
+
+    function toggleGroupHighlight2(groupId, multiSelect = false) {
+        if (!multiSelect) { highlightedGroups2.clear(); }
+
+        if (highlightedGroups.has(groupId)) highlightedGroups.delete(groupId);
+
+        if (highlightedGroups2.has(groupId)) {
+            highlightedGroups2.delete(groupId);
+        } else {
+            highlightedGroups2.add(groupId);
+        }
+        renderGame();
+    }
+
+    function clearHighlights() {
+        highlightedGroups.clear();
+        highlightedGroups2.clear();
+        renderGame();
+    }
+
+    // =========================================================
+    // SORTING
+    // =========================================================
+
+    function applySort() {
+        currentSort = document.getElementById('sortSelect').value;
+        renderObjectsPool();
+    }
+
+    function sortObjects(objectsArray) {
+        if (currentSort === 'none') return objectsArray;
+
+        const sorted = [...objectsArray];
+        groupSeparators = [];
+
+        switch (currentSort) {
+            case 'number-asc':
+                sorted.sort((a, b) => (a.number || 0) - (b.number || 0));
+                break;
+
+            case 'singles':
+                sorted.sort((a, b) => {
+                    const diff = getUsageSortValue(a, 'singlesusage') - getUsageSortValue(b, 'singlesusage');
+                    return diff !== 0 ? diff : a.name.localeCompare(b.name);
+                });
+                for (let i = 0; i < sorted.length - 1; i++) {
+                    if (getUsageSortValue(sorted[i], 'singlesusage') !== getUsageSortValue(sorted[i + 1], 'singlesusage'))
+                        groupSeparators.push(i);
+                }
+                break;
+
+            case 'doubles':
+                sorted.sort((a, b) => {
+                    const diff = getUsageSortValue(a, 'doublesusage') - getUsageSortValue(b, 'doublesusage');
+                    return diff !== 0 ? diff : a.name.localeCompare(b.name);
+                });
+                for (let i = 0; i < sorted.length - 1; i++) {
+                    if (getUsageSortValue(sorted[i], 'doublesusage') !== getUsageSortValue(sorted[i + 1], 'doublesusage'))
+                        groupSeparators.push(i);
+                }
+                break;
+
+            case 'name-asc':
+                sorted.sort((a, b) => a.name.localeCompare(b.name));
+                break;
+
+            case 'tier':
+                sorted.sort((a, b) => {
+                    const ta = getGenerationSortValue(a);
+                    const tb = getGenerationSortValue(b);
+                    if (ta !== tb) return ta - tb;
+                    return a.name.localeCompare(b.name);
+                });
+                for (let i = 0; i < sorted.length - 1; i++) {
+                    if (getGenerationSortValue(sorted[i]) !== getGenerationSortValue(sorted[i + 1]))
+                        groupSeparators.push(i);
+                }
+                break;
+        }
+        return sorted;
+    }
+
+    function getGenerationSortValue(obj) {
+        const activeGenId  = activeGenerations[0];
+        const stringValue  = obj[`generation${activeGenId}`] || '';
+        return MODE_ORDER[stringValue];
+    }
+
+    function getUsageSortValue(obj, field) {
+        const val = obj[field] || 'Unused';
+        return USAGE_ORDER[val] ?? 99;
+    }
+
+    // =========================================================
+    // CONTEXT MENU (weaknesses + forme switching)
+    // =========================================================
+
+    function showContextMenu(e, obj) {
+        const menu    = document.getElementById('contextMenu');
+        const content = document.getElementById('contextMenuContent');
+        menu.style.display = 'none';
+
+        const allProps = [
+            ...(obj.x2Eff || []).map(p => ({ prop: p, source: 1 })),
+            ...(obj.x4Eff || []).map(p => ({ prop: p, source: 2 })),
+        ];
+
+        const propertyChips = allProps.map(item =>
+            `<span class="property-chip" style="background: ${typeColours[item.prop] || '#95a5a6'};">
+                ${item.prop}
+            </span>`
+        ).join('');
+
+        // Switch-to-base button (for alternatives)
+        let actionsHtml = '';
+        if (!obj.isBase && obj.baseObject) {
+            actionsHtml = `
+                <div style="margin-top:10px; border-top:1px solid #eee; padding-top:8px;">
+                    <button class="action-btn switch-base-btn" data-object-id="${obj.id}">
+                        🔄 Switch to base (${obj.baseObject.name})
+                    </button>
+                    <div style="font-size:0.7rem; color:#666; margin-bottom:6px; font-style:italic;">
+                        Switching will return Pokémon to sorting pool
+                    </div>
+                </div>`;
+        }
+
+        // Alternatives section (for base objects)
+        let alternativesHtml = '';
+        if (obj.isBase && obj.alternatives && obj.alternatives.length > 0) {
+            const validAlternatives = obj.alternatives.filter(
+                alt => shouldIncludeObject(alt, activeGenerations)
+            );
+
+            if (validAlternatives.length > 0) {
+                const altButtons = validAlternatives.map(alt => {
+                    const originalIndex = obj.alternatives.findIndex(a => a.name === alt.name);
+                    return `<button class="action-btn alt-switch-btn"
+                                    data-alt-index="${originalIndex}"
+                                    data-base-id="${obj.id}">
+                                🔀 Switch to ${alt.name}
+                            </button>`;
+                }).join('');
+
+                alternativesHtml = `
+                    <div style="margin-top:10px; border-top:1px solid #eee; padding-top:8px;">
+                        <strong>Alternatives (${validAlternatives.length} available):</strong>
+                        <div style="display:flex; flex-direction:column; gap:4px; margin-top:6px;">
+                            ${altButtons}
+                        </div>
+                        <div style="font-size:0.7rem; color:#666; margin-bottom:6px; font-style:italic;">
+                            Switching will return Pokémon to sorting pool
+                        </div>
+                    </div>`;
+            } else {
+                alternativesHtml = `
+                    <div style="margin-top:10px; border-top:1px solid #eee; padding-top:8px; opacity:0.5;">
+                        <span style="font-size:0.7rem; color:#666;">No alternatives available with current filters</span>
+                    </div>`;
+            }
+        }
+
+        content.innerHTML = `
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+                <img src="/static/images/pokemonicons/${obj.filename}.png"
+                     alt="${obj.name}"
+                     style="width:64px; height:64px; object-fit:contain; margin:auto;">
+            </div>
+            <div class="context-section">
+                <div class="context-section-title">Weaknesses</div>
+                <div class="property-chip-container">
+                    ${propertyChips || '<span class="no-weaknesses">No weaknesses</span>'}
+                </div>
+            </div>
+            ${actionsHtml}
+            ${alternativesHtml}
+        `;
+
+        // Wire up alternative buttons
+        if (obj.alternatives && obj.alternatives.length > 0) {
+            menu.querySelectorAll('.alt-switch-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    switchToAlternative(btn.dataset.baseId, parseInt(btn.dataset.altIndex));
+                    menu.style.display = 'none';
+                });
+            });
+        }
+
+        const switchBaseBtn = menu.querySelector('.switch-base-btn');
+        if (switchBaseBtn) {
+            switchBaseBtn.addEventListener('click', () => {
+                switchToBase(switchBaseBtn.dataset.objectId);
+                menu.style.display = 'none';
+            });
+        }
+
+        // Position menu
+        menu.style.display = 'block';
+        let left = e.clientX;
+        let top  = e.clientY;
+        if (left + menu.offsetWidth  > window.innerWidth)  left = window.innerWidth  - menu.offsetWidth  - 10;
+        if (top  + menu.offsetHeight > window.innerHeight) top  = window.innerHeight - menu.offsetHeight - 10;
+        menu.style.left = left + 'px';
+        menu.style.top  = top  + 'px';
+
+        const hideMenu = (event) => {
+            if (!menu.contains(event.target)) {
+                menu.style.display = 'none';
+                document.removeEventListener('click',  hideMenu);
+                document.removeEventListener('scroll', hideMenu);
+            }
+        };
+        setTimeout(() => {
+            document.addEventListener('click',  hideMenu);
+            document.addEventListener('scroll', hideMenu);
+        }, 100);
+    }
+
+    function switchToAlternative(baseId, altIndex) {
+        const baseObj = allObjects.find(obj => obj.id === baseId);
+        if (!baseObj || !baseObj.alternatives || !baseObj.alternatives[altIndex]) return;
+
+        const altObj  = baseObj.alternatives[altIndex];
+        const gameObj = objects.find(obj => obj.id === baseId);
+        if (!gameObj) return;
+
+        const switchedObj = {
+            ...altObj,
+            id:          gameObj.id,
+            isBase:      false,
+            baseSpecies: baseObj.name,
+            baseObject:  baseObj,
+            group:       null,  // always return to pool on forme switch
+        };
+
+        const index = objects.findIndex(obj => obj.id === baseId);
+        if (index !== -1) objects[index] = switchedObj;
+
+        renderGame();
+        // showMessage(`Switched to ${altObj.name}`, 'warning');
+    }
+
+    function switchToBase(altId) {
+        const altObj  = objects.find(obj => obj.id === altId);
+        if (!altObj || !altObj.baseObject) return;
+
+        const baseObj = altObj.baseObject;
+        const switchedObj = {
+            ...baseObj,
+            id:           altObj.id,
+            group:        null,  // always return to pool on forme switch
+            alternatives: baseObj.alternatives,
+        };
+
+        const index = objects.findIndex(obj => obj.id === altId);
+        if (index !== -1) objects[index] = switchedObj;
+
+        renderGame();
+        // showMessage(`Switched back to ${baseObj.name}`, 'warning');
+    }
+
+    // =========================================================
+    // TEAM MANAGEMENT
+    // =========================================================
+
+    function addGroup() {
+        const newId = groups.length;
+        groups.push({ id: newId, name: `Group ${String.fromCharCode(65 + newId)}`, objects: [] });
+        renderGame();
+        saveGameState();
+        // showMessage(`Added group ${String.fromCharCode(65 + newId)}`, 'warning');
+    }
+
+    function removeGroup() {
+        if (groups.length <= 1) {
+            // showMessage('Cannot remove the last group!', 'error');
+            return;
+        }
+        const lastGroup = groups[groups.length - 1];
+        objects.forEach(obj => { if (obj.group === lastGroup.id) obj.group = null; });
+        groups.pop();
+        renderGame();
+        saveGameState();
+        // showMessage(`Removed group ${lastGroup.name}`, 'warning');
+    }
+
+    // =========================================================
+    // RESET
+    // =========================================================
+
+    function resetGame() {
+        objects = masterObjects.map(obj => ({ ...obj, group: null }));
+        groups  = [{ id: 0, name: 'Group A', objects: [] }];
+        filterHistory = [];
+        renderFilterBanners();
+        dismissCurse();
+        renderGame();
+        sessionStorage.removeItem('sortingGameState');
+        // showMessage('Game reset', 'warning');
+    }
+
+    // =========================================================
+    // SPIN THE WHEEL
+    // =========================================================
+
+    const FILTER_CONFIG_RARITY = FILTER_CONFIG.rarityChances;
+
+    function selectRarity() {
+        let total = 0;
+        for (const chance of Object.values(FILTER_CONFIG.rarityChances)) total += chance;
+        const rand = Math.random() * total;
+        let cumulative = 0;
+        for (const [rarity, chance] of Object.entries(FILTER_CONFIG.rarityChances)) {
+            cumulative += chance;
+            if (rand < cumulative) return rarity;
+        }
+        return 'common';
+    }
+
+    // Tracks any currently active curse
+    let activeCurse  = null;
+    // History of all applied filters (for stacking banners)
+    let filterHistory = [];
+
+    function spinTheWheel() {
+        if (!objects || objects.length === 0) {
+            // showMessage('No Pokémon in the pool to filter!', 'error');
+            return;
+        }
+
+        const rarity      = selectRarity();
+        const filtersList = FILTERS[rarity];
+
+        if (!filtersList || filtersList.length === 0) {
+            // showMessage(`No filters implemented for rarity: ${rarity} yet.`, 'warning');
+            showWheelAndSpin(rarity, null);
+            return;
+        }
+
+        const template = filtersList[Math.floor(Math.random() * filtersList.length)];
+
+        // ── CURSE (banner only, no pool removal) ─────────────────
+        if (template.isCurse) {
+            activeCurse = template;
+            showCurseBanner(template);
+
+            const result = {
+                rarity,
+                name:        template.name,
+                description: template.description,
+                removed:     [],
+                remaining:   objects.length,
+                isCurse:     true,
+            };
+
+            showWheelAndSpin(rarity, () => showFilterResultModal(result));
+            return;
+        }
+
+        // ── FILTER + CURSE (pool removal AND banner) ──────────────
+        if (template.filterAndCurse) {
+            const applyFunc = template.init ? template.init() : null;
+            if (!applyFunc) {
+                // showMessage(`Filter "${template.name}" has no apply function.`, 'warning');
+                showWheelAndSpin(rarity, null);
+                return;
+            }
+
+            const originalCount = objects.length;
+            const kept          = objects.filter(obj => applyFunc(obj));
+            const removed       = objects.filter(obj => !applyFunc(obj));
+
+            objects = kept;
+            objects.forEach(obj => obj.group = null);
+            renderGame();
+            saveGameState();
+
+            activeCurse = template;
+            showCurseBanner(template);
+
+            const result = {
+                rarity,
+                name:        template.name,
+                description: template.description,
+                removed,
+                remaining:   objects.length,
+                original:    originalCount,
+                isCurse:     true,   // use curse styling in the modal
+            };
+
+            showWheelAndSpin(rarity, () => showFilterResultModal(result));
+            return;
+        }
+
+        // ── POOL FILTER ──────────────────────────────────────────
+        const applyFunc = template.init ? template.init() : null;
+        if (!applyFunc) {
+            // showMessage(`Filter "${template.name}" has no apply function.`, 'warning');
+            showWheelAndSpin(rarity, null);
+            return;
+        }
+
+        const originalCount   = objects.length;
+        const kept            = objects.filter(obj => applyFunc(obj));
+        const removed         = objects.filter(obj => !applyFunc(obj));
+
+        objects = kept;
+        objects.forEach(obj => obj.group = null);
+        renderGame();
+        saveGameState();
+
+        const desc = template.description || (template.describe ? template.describe() : '');
+
+        const result = {
+            rarity,
+            name:        template.name,
+            description: desc,
+            removed,
+            remaining:   objects.length,
+            original:    originalCount,
+            isCurse:     false,
+        };
+
+        // Add to history — banners rendered after wheel finishes
+        filterHistory.push(result);
+
+        showWheelAndSpin(rarity, () => {
+            renderFilterBanners();
+            showFilterResultModal(result);
+        });
+    }
+
+    function showWheelAndSpin(rarity, onComplete) {
+        const overlay = document.getElementById('wheelOverlay');
+        overlay.style.display = 'flex';
+        if (!wheelCanvas) {
+            wheelCanvas = document.getElementById('rouletteWheel');
+            ctx         = wheelCanvas.getContext('2d');
+            drawWheel(0);
+        }
+        startSpin(rarity, onComplete);
+    }
+
+    // ── Filter Result Modal ───────────────────────────────────────
+
+    function showFilterResultModal(result) {
+        const modal      = document.getElementById('filterResultModal');
+        const rarityEl   = document.getElementById('filterResultRarity');
+        const nameEl     = document.getElementById('filterResultName');
+        const descEl     = document.getElementById('filterResultDesc');
+        const statsEl    = document.getElementById('filterResultStats');
+        const labelEl    = document.getElementById('filterResultRemovedLabel');
+        const gridEl     = document.getElementById('filterResultGrid');
+
+        const rarityLabels = {
+            common: '🟥 Common', rare: '🟦 Rare',
+            unique: '🟨 Unique', curse: '🟪 Curse',
+        };
+
+        rarityEl.textContent  = rarityLabels[result.rarity] || result.rarity;
+        rarityEl.className    = `filter-result-rarity rarity-${result.rarity}`;
+        nameEl.textContent    = result.name;
+        descEl.textContent    = result.description || '';
+
+        if (result.isCurse && result.removed.length === 0) {
+            statsEl.textContent  = 'No Pokémon were removed — honour rule active.';
+            labelEl.textContent  = '';
+            gridEl.innerHTML     = '';
+        } else {
+            statsEl.textContent = `${result.removed.length} removed · ${result.remaining} remain`;
+            labelEl.textContent = result.removed.length > 0 ? 'Removed Pokémon' : '';
+            gridEl.innerHTML    = '';
+
+            if (result.removed.length === 0) {
+                gridEl.innerHTML = '<span class="filter-result-empty">No Pokémon were removed by this filter.</span>';
+            } else {
+                const savedSeparators = groupSeparators;
+                const sortedRemoved = sortObjects(result.removed);
+                groupSeparators = savedSeparators;
+                sortedRemoved.forEach(obj => {
+                    const cell = document.createElement('div');
+                    cell.className        = 'filter-result-sprite';
+                    cell.setAttribute('data-name', obj.name);
+                    const img             = document.createElement('img');
+                    img.src               = `/static/images/pokemonicons/${obj.filename}.png`;
+                    img.alt               = obj.name;
+                    img.onerror           = function() { this.src = '/static/images/icons/default.png'; this.onerror = null; };
+                    cell.appendChild(img);
+                    gridEl.appendChild(cell);
+                });
+            }
+        }
+
+        modal.style.display = 'flex';
+
+        // Close on click outside panel or any keypress
+        function closeModal(e) {
+            if (e.type === 'keydown' || !e.target.closest('.filter-result-panel')) {
+                modal.style.display = 'none';
+                document.removeEventListener('keydown', closeModal);
+                modal.removeEventListener('click', closeModal);
+            }
+        }
+
+        setTimeout(() => {
+            document.addEventListener('keydown', closeModal);
+            modal.addEventListener('click', closeModal);
+        }, 200);
+    }
+
+    // ── Filter History Banners ────────────────────────────────────
+
+    const RARITY_BANNER_ICONS = {
+        common: '🎲', rare: '💠', unique: '⭐', curse: '🔮',
+    };
+
+    function renderFilterBanners() {
+        const container = document.getElementById('filterBanners');
+        container.innerHTML = '';
+
+        filterHistory.forEach((result, idx) => {
+            if (result.isCurse) return; // Curse has its own banner
+
+            const banner = document.createElement('div');
+            banner.className = `filter-banner rarity-${result.rarity}`;
+            banner.title     = 'Click to see removed Pokémon';
+
+            banner.innerHTML = `
+                <span class="filter-banner-icon">${RARITY_BANNER_ICONS[result.rarity] || '🎡'}</span>
+                <div class="filter-banner-body">
+                    <span class="filter-banner-name">${result.name}</span>
+                    <span class="filter-banner-desc">${result.description || ''}</span>
+                </div>
+                <span class="filter-banner-count">−${result.removed.length}</span>
+            `;
+
+            banner.addEventListener('click', () => showFilterResultModal(result));
+            container.appendChild(banner);
+        });
+    }
+
+    // ── Curse Banner ──────────────────────────────────────────────
+
+    function showCurseBanner(curse) {
+        document.getElementById('curseName').textContent        = curse.name;
+        document.getElementById('curseDescription').textContent = curse.description;
+        document.getElementById('curseBanner').style.display    = 'flex';
+    }
+
+    function dismissCurse() {
+        activeCurse = null;
+        document.getElementById('curseBanner').style.display = 'none';
+    }
+
+    // =========================================================
+    // WHEEL ANIMATION
+    // =========================================================
+
+    const SEGMENTS = [
+        'unique','common','rare','common','common',
+        'rare','common','common','rare','common',
+        'curse','common','rare','common','common',
+        'rare','common','common','rare','common',
+    ];
+
+    // Richer palette — warm neutrals + vivid accents
+    const RARITY_COLORS = {
+        common: { fill: '#E8534A', dark: '#C0392B', light: '#FDECEA', text: '#fff' },
+        rare:   { fill: '#4A90D9', dark: '#2471A3', light: '#EAF2FB', text: '#fff' },
+        unique: { fill: '#F5C518', dark: '#D4A017', light: '#FEF9E7', text: '#2c2c2c' },
+        curse:  { fill: '#9B59B6', dark: '#7D3C98', light: '#F5EEF8', text: '#fff' },
+    };
+
+    // Emoji pools per rarity — one is randomly assigned to each non-selected slice at draw time
+    const RARITY_EMOJIS = {
+        common: ['🎲','🔤','🌈','🗺️','🎨','🔀','🌍','🅰️'],
+        rare:   ['📏','⚖️','💪','🛡️','🥚','🔮','🐾','🔷'],
+        unique: ['🏆','🎯','⭐','🗿','🌋','🏅','🎪','💎'],
+        curse:  ['⛓️','🔗','👁️','🌀','🎵'],
+    };
+
+    let wheelCanvas    = null;
+    let ctx            = null;
+    let wheelAngle     = 0;
+    let animationId    = null;
+    let spinning       = false;
+    // Slice emoji assigned at the start of each spin so they stay stable during animation
+    let sliceEmojis    = [];
+
+    function assignSliceEmojis(winnerIndex) {
+        sliceEmojis = SEGMENTS.map((rarity, i) => {
+            const pool = RARITY_EMOJIS[rarity] || ['❓'];
+            return pool[Math.floor(Math.random() * pool.length)];
+        });
+    }
+
+    function drawWheel(angleRad, winnerIndex = -1) {
+        const w  = wheelCanvas.width, h = wheelCanvas.height;
+        const cx = w / 2, cy = h / 2;
+        const outerR    = w * 0.46;
+        const innerR    = 18;          // hub radius
+        const angleStep = (Math.PI * 2) / SEGMENTS.length;
+
+        ctx.clearRect(0, 0, w, h);
+
+        // Outer ring shadow
+        ctx.save();
+        ctx.shadowColor   = 'rgba(0,0,0,0.3)';
+        ctx.shadowBlur    = 18;
+        ctx.beginPath();
+        ctx.arc(cx, cy, outerR + 2, 0, Math.PI * 2);
+        ctx.fillStyle = '#111';
+        ctx.fill();
+        ctx.restore();
+
+        for (let i = 0; i < SEGMENTS.length; i++) {
+            const rarity  = SEGMENTS[i];
+            const palette = RARITY_COLORS[rarity];
+            const start   = angleRad + i * angleStep;
+            const end     = start + angleStep;
+            const mid     = start + angleStep / 2;
+            const isWinner = (i === winnerIndex);
+
+            // Slice fill
+            ctx.beginPath();
+            ctx.moveTo(cx, cy);
+            ctx.arc(cx, cy, outerR, start, end);
+            ctx.closePath();
+            ctx.fillStyle = isWinner ? palette.dark : palette.fill;
+            ctx.fill();
+
+            // Subtle inner highlight stripe
+            ctx.beginPath();
+            ctx.moveTo(cx, cy);
+            ctx.arc(cx, cy, outerR * 0.55, start, end);
+            ctx.closePath();
+            ctx.fillStyle = isWinner
+                ? 'rgba(255,255,255,0.12)'
+                : 'rgba(255,255,255,0.08)';
+            ctx.fill();
+
+            // Slice border
+            ctx.beginPath();
+            ctx.moveTo(cx, cy);
+            ctx.arc(cx, cy, outerR, start, end);
+            ctx.closePath();
+            ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+            ctx.lineWidth   = 1.5;
+            ctx.stroke();
+
+            // Emoji icon
+            if (sliceEmojis.length > 0) {
+                const iconR = outerR * 0.68;
+                const ex    = cx + iconR * Math.cos(mid);
+                const ey    = cy + iconR * Math.sin(mid);
+                ctx.save();
+                ctx.translate(ex, ey);
+                ctx.rotate(mid + Math.PI / 2);
+                ctx.font         = `${Math.round(w * 0.048)}px serif`;
+                ctx.textAlign    = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(sliceEmojis[i], 0, 0);
+                ctx.restore();
+            }
+
+            // Winner highlight ring
+            if (isWinner) {
+                ctx.beginPath();
+                ctx.moveTo(cx, cy);
+                ctx.arc(cx, cy, outerR, start, end);
+                ctx.closePath();
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth   = 4;
+                ctx.stroke();
+            }
+        }
+
+        // Outer bezel ring
+        ctx.beginPath();
+        ctx.arc(cx, cy, outerR + 3, 0, Math.PI * 2);
+        ctx.strokeStyle = 'rgba(255,255,255,0.6)';
+        ctx.lineWidth   = 3;
+        ctx.stroke();
+
+        // Hub circle
+        const hubGrad = ctx.createRadialGradient(cx - 4, cy - 4, 2, cx, cy, innerR);
+        hubGrad.addColorStop(0, '#5a6a7a');
+        hubGrad.addColorStop(1, '#1c2833');
+        ctx.beginPath();
+        ctx.arc(cx, cy, innerR, 0, Math.PI * 2);
+        ctx.fillStyle = hubGrad;
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+        ctx.lineWidth   = 1.5;
+        ctx.stroke();
+    }
+
+    function startSpin(targetRarity, onComplete) {
+        if (spinning) return;
+
+        const possibleIndices = SEGMENTS.reduce((arr, seg, idx) => {
+            if (seg === targetRarity) arr.push(idx);
+            return arr;
+        }, []);
+
+        const targetIndex = possibleIndices.length > 0
+            ? possibleIndices[Math.floor(Math.random() * possibleIndices.length)]
+            : 0;
+
+        assignSliceEmojis(targetIndex);
+
+        const angleStep    = (Math.PI * 2) / SEGMENTS.length;
+        const segmentMid   = targetIndex * angleStep + angleStep / 2;
+        let targetRotation = (-Math.PI / 2 - segmentMid + Math.PI * 2) % (Math.PI * 2);
+        const startAngle   = wheelAngle % (Math.PI * 2);
+        const delta        = (targetRotation - startAngle + Math.PI * 2) % (Math.PI * 2);
+        const finalAngle   = startAngle + delta + 5 * Math.PI * 2;
+
+        const duration  = 4500;
+        const startTime = performance.now();
+
+        function finish() {
+            cancelAnimationFrame(animationId);
+            wheelAngle = finalAngle % (Math.PI * 2);
+            drawWheel(wheelAngle, targetIndex);
+            spinning = false;
+            // Remove skip listeners
+            document.removeEventListener('keydown', skipHandler);
+            document.removeEventListener('click',   skipHandler);
+            setTimeout(() => {
+                document.getElementById('wheelOverlay').style.display = 'none';
+                if (onComplete) onComplete();
+            }, 700);
+        }
+
+        function skipHandler(e) {
+            // Ignore clicks that are on the overlay background itself (not the wheel)
+            // Any key or any click skips
+            if (spinning) finish();
+        }
+
+        function animateSpin(now) {
+            const t    = Math.min(1, (now - startTime) / duration);
+            const ease = t < 0.7
+                ? 4 * t * t * t
+                : 1 - Math.pow(-2 * t + 2, 3) / 2;
+            wheelAngle = startAngle + (finalAngle - startAngle) * ease;
+            drawWheel(wheelAngle, t === 1 ? targetIndex : -1);
+
+            if (t < 1) {
+                animationId = requestAnimationFrame(animateSpin);
+            } else {
+                finish();
+            }
+        }
+
+        spinning = true;
+        // Delay attaching skip listeners slightly so the click that triggered
+        // spinTheWheel() doesn't immediately skip the animation
+        setTimeout(() => {
+            document.addEventListener('keydown', skipHandler);
+            document.addEventListener('click',   skipHandler);
+        }, 300);
+
+        animationId = requestAnimationFrame(animateSpin);
+    }
+
+    // =========================================================
+    // HELP MODAL
+    // =========================================================
+
+    function showHelp()  {
+        document.getElementById('helpModal').style.display = 'block';
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeHelp() {
+        document.getElementById('helpModal').style.display = 'none';
+        document.body.style.overflow = '';
+    }
+
+    window.onclick = function(event) {
+        const modal = document.getElementById('helpModal');
+        if (event.target === modal) closeHelp();
+    };
+
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            const modal = document.getElementById('helpModal');
+            if (modal.style.display === 'block') closeHelp();
+        }
+    });
+
+    // =========================================================
+    // GENERATION TOGGLES UI
+    // =========================================================
+
+    function renderGenerationToggles() {
+        const grid = document.getElementById('categoryGrid');
+        if (!grid) return;
+        grid.innerHTML = '';
+
+        GENERATIONS.forEach(gen => {
+            const item = document.createElement('div');
+            item.className = 'category-item';
+
+            const nameSpan = document.createElement('span');
+            nameSpan.className = `category-name category-${gen.id}-text`;
+            nameSpan.textContent = gen.name;
+
+            const label = document.createElement('label');
+            label.className = `toggle-btn category-${gen.id}`;
+
+            const input = document.createElement('input');
+            input.type     = 'checkbox';
+            input.id       = `cat${gen.id}Toggle`;
+            input.checked  = activeGenerations.includes(gen.id);
+            input.onchange = () => toggleGeneration(gen.id);
+
+            const checkmark = document.createElement('span');
+            checkmark.className = 'checkmark';
+
+            label.appendChild(input);
+            label.appendChild(checkmark);
+            item.appendChild(nameSpan);
+            item.appendChild(label);
+            grid.appendChild(item);
+        });
+    }
+
+    function populateModeSelector() {
+        const select = document.getElementById('modeSelect');
+        if (!select) return;
+
+        const activeGenId    = activeGenerations[0];
+        const availableModes = GENERATION_MODES[activeGenId] || ['OU'];
+
+        select.innerHTML = '';
+        availableModes.forEach(mode => {
+            const option       = document.createElement('option');
+            option.value       = mode;
+            option.textContent = MODE_NAMES[mode] || mode;
+            select.appendChild(option);
+        });
+
+        currentMode = select.value;
+    }
+
+    function changeGameMode() {
+        const select = document.getElementById('modeSelect');
+        currentMode  = select.value;
+        localStorage.setItem('gameMode', currentMode);
+        applyGenerationFilter();
+        renderGenerationToggles();
+        renderGame();
+        // showMessage(`Mode changed to ${select.options[select.selectedIndex].text}`, 'warning');
+    }
+
+    // =========================================================
+    // SESSION STATE
+    // =========================================================
+
+    function saveGameState() {
+        try {
+            const gameState = {
+                objects: objects.map(obj => ({
+                    id:               obj.id,
+                    name:             obj.name,
+                    group:            obj.group,
+                    isBase:           obj.isBase,
+                    filename:         obj.filename,
+                    number:           obj.number,
+                    generations:      obj.generations,
+                    primaryGeneration: obj.primaryGeneration,
+                    weaknesses:       obj.weaknesses,
+                    baseObject:       obj.baseObject ? { name: obj.baseObject.name } : null,
+                })),
+                groups:           groups,
+                activeGenerations,
+                currentSort,
+                timestamp:        new Date().getTime(),
+            };
+            sessionStorage.setItem('sortingGameState', JSON.stringify(gameState));
+        } catch (e) {
+            console.warn('Failed to save game state:', e);
+        }
+    }
+
+    function loadGameState() {
+        try {
+            const savedState = sessionStorage.getItem('sortingGameState');
+            if (!savedState) return false;
+
+            const state = JSON.parse(savedState);
+            const oneDay = 24 * 60 * 60 * 1000;
+            if (new Date().getTime() - state.timestamp > oneDay) {
+                sessionStorage.removeItem('sortingGameState');
+                return false;
+            }
+
+            objects = state.objects.map(savedObj => {
+                const fullObj = allObjects.find(o => o.name === savedObj.name) || savedObj;
+                return {
+                    ...fullObj,
+                    group:      savedObj.group,
+                    baseObject: savedObj.baseObject
+                        ? allObjects.find(o => o.name === savedObj.baseObject.name)
+                        : null,
+                };
+            });
+
+            groups            = state.groups;
+            activeGenerations = state.activeGenerations;
+            currentSort       = state.currentSort || 'none';
+
+            updateGenerationCheckboxes();
+            const sortSelect = document.getElementById('sortSelect');
+            if (sortSelect && currentSort !== 'none') sortSelect.value = currentSort;
+
+            return true;
+        } catch (e) {
+            console.warn('Failed to load game state:', e);
+            return false;
+        }
+    }
+
+    function updateGenerationCheckboxes() {
+        for (let i = 1; i <= 20; i++) {
+            const checkbox = document.getElementById(`cat${i}Toggle`);
+            if (checkbox) checkbox.checked = activeGenerations.includes(i);
+        }
+    }
+
+    // =========================================================
+    // UTILITIES
+    // =========================================================
+
+    function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+    }
+
+    // function // showMessage(text, type) {
+    //     const messageDiv = document.getElementById('message');
+    //     messageDiv.innerHTML  = text;
+    //     messageDiv.className  = `message ${type}`;
+    //     messageDiv.style.display = 'block';
+    // }
+
+</script>
+{% endblock %}

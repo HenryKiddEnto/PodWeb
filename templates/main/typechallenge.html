@@ -5,28 +5,31 @@
 
 {% block content %}
 <div class="game-container">
+    <!-- Optional Page Title -->
     <div class="game-header">
     </div>
 
-            <!-- Category Toggles -->
-        <div class="category-toggles">
-            <span class="category-label">Regions:</span>
-
-            <div class="category-grid" id="categoryGrid">
+    <!-- Category Toggles (Regions)-->
+    <div class="category-toggles">
+        <span class="category-label">Regions:</span>
+        <div class="category-grid" id="categoryGrid">
                 <!-- Categories will be inserted here by JavaScript -->
-            </div>
+        </div>
+
+        <!-- Category Actions and Filters -->
         <div class="category-actions">
             <button class="btn small" onclick="applyCategoryFilter()">Apply Filter</button>
             <button class="btn small" onclick="toggleAllCategories(true)">✔</button>
             <button class="btn small" onclick="toggleAllCategories(false)">✘</button>
             <span class="filtered-count" id="filteredCount"></span>
+
             <div class="simple-toggle">
                 <span class="simple-label">Full Regional Dex</span>
                 <label class="switch">
                     <input type="checkbox" id="DexToggle" onchange="toggleDex()">
                     <span class="slider round"></span>
-                </label>
-            </div>
+                    </label>
+                </div>
             <div class="simple-toggle">
                 <span class="simple-label">DLC Pokemon</span>
                 <label class="switch">
@@ -90,11 +93,13 @@
     </div>
 </div>
 
+<!-- Loading Message -->
 <div id="simpleLoader" class="simple-loader">
     <div class="simple-spinner"></div>
     <span>Loading game data...</span>
 </div>
 
+<!-- FAQ Page -->
 <div id="helpModal" class="modal">
     <div class="modal-content">
         <div class="modal-header">
@@ -112,7 +117,8 @@
                 <h3>Basic Controls</h3>
                 <ul>
                     <li><strong>Drag & Drop:</strong> Move Pokémon between teams</li>
-                    <li><strong>Right-Click:</strong> View type weaknesses and alternate formes</li>
+                    <li><strong>Right Click on Pokémon:</strong> View type weaknesses and alternate formes</li>
+                    <li><strong>Left / Right Click on Cell:</strong> Highlight Blue / Red</li>
                 </ul>
             </div>
             <div class="help-section">
@@ -122,14 +128,6 @@
                     <li>The <span class="orange-text">remainder box</span> holds 1-2 Pokémon when the total isn't divisible by 3</li>
                     <li>Click <strong>Check</strong> to verify your solution</li>
                     <li>Click <strong>Reset</strong> to start over</li>
-                </ul>
-            </div>
-
-            <div class="help-section">
-                <h3>Regions</h3>
-                <ul>
-                    <li>Each region includes the full regional dex.</li>
-                    <li>Regions marked by ★ contain DLC Pokémon (e.g. Isle of Armor, ZA Hyperspace) </li>
                 </ul>
             </div>
         </div>
@@ -155,25 +153,275 @@
 </div>
 
 <style>
-    .game-container {
-        max-width: 1400px;
-        margin: 0 auto;
-        font-size: 14px; /* Base smaller font */
+
+    /* ====================================
+   STYLES THAT NEED EDITS (NEW GENERATIONS)
+   ==================================== */
+
+    /* Category Backgrounds (Unchecked) */
+    .category-1 .checkmark { background-color: #FFD1D1; }
+    .category-2 .checkmark { background-color: #EEDEB0; }
+    .category-3 .checkmark { background-color: #C2CFE8; }
+    .category-4 .checkmark { background-color: #D5CADC; }
+    .category-5 .checkmark { background-color: #D9D9D9; }
+    .category-6 .checkmark { background-color: #D5F3ED; }
+    .category-7 .checkmark { background-color: #FBF2D9; }
+    .category-8 .checkmark { background-color: #f8bbd0; }
+    .category-9 .checkmark { background-color: #D5CADC; }
+    .category-10 .checkmark { background-color: #D5CADC; }
+    .category-11 .checkmark { background-color: #D5F3ED; }
+    .category-12 .checkmark { background-color: #B3E0FB; }
+
+    /* Hover state */
+    .toggle-btn:hover .checkmark {
+        transform: scale(1.1);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
     }
 
-    .game-header h1 {
-        font-size: 1.8rem;
-        margin-bottom: 5px;
+    /* Checked state - full color */
+    .toggle-btn input:checked ~ .checkmark {
+        background-color: currentColor;
+        border-color: white;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+
+    /* Checkmark indicator (white dot or check) */
+    .toggle-btn input:checked ~ .checkmark::after {
+        content: "✓";
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        color: white;
+        font-size: 1.2rem;
+        font-weight: bold;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+    }
+
+    /* Category Backgrounds (Checked) */
+    .category-1 input:checked ~ .checkmark { background-color: #F40A0A; }
+    .category-2 input:checked ~ .checkmark { background-color: #D5AD3B; }
+    .category-3 input:checked ~ .checkmark { background-color: #4A75CB; }
+    .category-4 input:checked ~ .checkmark { background-color: #AB6EAA; }
+    .category-5 input:checked ~ .checkmark { background-color: #696969; }
+    .category-6 input:checked ~ .checkmark { background-color: #4AC9B1; }
+    .category-7 input:checked ~ .checkmark { background-color: #FDD404; }
+    .category-8 input:checked ~ .checkmark { background-color: #ec407a; }
+    .category-9 input:checked ~ .checkmark { background-color: #AB6EAA; }
+    .category-10 input:checked ~ .checkmark { background-color: #9F34A3; }
+    .category-11 input:checked ~ .checkmark { background-color: #4AC9B1; }
+    .category-12 input:checked ~ .checkmark { background-color: #0A8AD8; }
+
+   /* ====================================
+   MAIN STYLES
+   ==================================== */
+
+    /* Main Layout - Groups on left, Objects on right */
+    .game-layout {
+        display: flex;
+        gap: 15px;
+        height: calc(58vh);
+        min-height: 500px;
+    }
+
+    /* Groups Area - Scrollable */
+    .groups-main {
+        flex: 3;
+        overflow-y: auto;
+        padding-right: 10px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 15px;
+    }
+
+    .groups-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); /* Increased from 100px to 150px */
+        gap: 8px; /* Slightly larger gap */
+    }
+
+    /* Compact Group Boxes */
+    .group {
+        background: white;
+        border-radius: 6px;
+        border: 1px solid #dee2e6;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        transition: all 0.2s ease;
+    }
+
+    .group-objects {
+        min-height: 60px;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr); /* 3 columns in groups */
+        gap: 2px;
+    }
+
+    /* Group Highlights */
+    .group.complete {
+        background: #d4edda;  /* Light green background */
+        border-color: #28a745;  /* Green border */
+        box-shadow: 0 0 0 2px rgba(40, 167, 69, 0.2);
+        transition: all 0.2s ease;
+    }
+
+    .group.highlight {
+        background: #D5EEFF;  /* Light blue background */
+        border-color: #0099FF;  /* Blue border */
+        box-shadow: 0 0 0 2px rgba(0, 153, 255, 0.2);
+        transition: all 0.2s ease;
+        padding: 0px;
+        margin-bottom: 0px;
+    }
+
+    .group.highlight2 {
+        background: #FBEAEC;  /* Red background */
+        border-color: #DC3545;  /* Red border */
+        box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.2);
+        transition: all 0.2s ease;
+        padding: 0px;
+        margin-bottom: 0px;
+    }
+
+    /* Drag over effect - base */
+    .group-objects.drag-over {
+        border-radius: 4px;
+    }
+
+    /* Valid drop target */
+    .group-objects.drag-valid {
+        background: rgba(40, 167, 69, 0.1);
+        border: 2px dashed #28a745;
+    }
+
+    /* Invalid drop target */
+    .group-objects.drag-invalid {
+        background: rgba(220, 53, 69, 0.1);
+        border: 2px dashed #dc3545;
+        cursor: not-allowed;
+    }
+
+    /* Right Sidebar - Objects Pool */
+
+    .objects-sidebar {
+        flex: 1;
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 15px;
+        display: flex;
+        flex-direction: column;
+        min-width: 200px;
+    }
+
+    .objects-sidebar h3 {
+        font-size: 1rem;
+        margin-top: 0;
+        margin-bottom: 10px;
         color: #2c3e50;
-        text-align: center;
     }
 
-    .game-instructions {
-        font-size: 0.9rem;
-        color: #7f8c8d;
-        margin-bottom: 15px;
-        text-align: center;
+    .sidebar-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+        flex-wrap: wrap;
+        gap: 8px;
     }
+
+    .sidebar-header h3 {
+        margin: 0;
+        font-size: 1rem;
+    }
+
+
+    .objects-container {
+        overflow-y: auto;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr); /* 5 columns */
+        gap: 4px;
+        padding: 4px;
+    }
+
+    /* Compact Object Card - No Text */
+    .object-card {
+        border-radius: 4px;
+        cursor: move;
+        user-select: none;
+        transition: transform 0.1s, box-shadow 0.1s;
+        aspect-ratio: 1 / 1; /* Square cards */
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 2px;
+        position: relative;
+    }
+
+    .object-card:hover {
+        transform: translateY(-3px) scale(1.02);
+        box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+        z-index: 10; /* Bring hovered card to front */
+        filter: brightness(1.1);
+    }
+
+        /* Object Image */
+    .object-image {
+        width: 40px;
+        height: 40px;
+        object-fit: contain;
+        image-rendering: auto;
+        margin-bottom: 2px;
+    }
+
+    /* Property Indicator Dots */
+    .property-dots {
+        display: flex;
+        gap: 2px;
+        justify-content: center;
+        flex-wrap: wrap;
+        max-width: 100%;
+        padding: 0 2px;
+    }
+
+    .property-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        display: inline-block;
+        border: 1px solid rgba(255,255,255,0.5);
+        cursor: help;
+        flex-shrink: 0;
+    }
+
+    /* Alternatives */
+    .alt-indicator {
+        position: absolute;
+        top: 2px;
+        right: 2px;
+        font-size: 0.6rem;
+        background: rgba(255,255,255,0.9);
+        color: #2c3e50;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        cursor: help;
+        z-index: 2;
+    }
+
+    .object-card[data-has-alternatives="true"] {
+        cursor: pointer;
+    }
+
+    .object-card[data-has-alternatives="true"]:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    }
+
+    /* Object Card Buttons */
 
     .switching-icon {
         position: absolute;
@@ -199,119 +447,6 @@
         transform: scale(1.1);
         background: white;
         box-shadow: 0 3px 6px rgba(0,0,0,0.3);
-    }
-
-    /* Main Layout - Groups on left, Objects on right */
-    .game-layout {
-        display: flex;
-        gap: 15px;
-        height: calc(58vh);
-        min-height: 500px;
-    }
-
-    /* Valid drop target */
-    .group-objects.drag-valid {
-        background: rgba(40, 167, 69, 0.1);
-        border: 2px dashed #28a745;
-    }
-
-    /* Invalid drop target */
-    .group-objects.drag-invalid {
-        background: rgba(220, 53, 69, 0.1);
-        border: 2px dashed #dc3545;
-        cursor: not-allowed;
-    }
-
-    /* Drag over effect - base */
-    .group-objects.drag-over {
-        border-radius: 4px;
-    }
-
-    /* Groups Area - Scrollable */
-    .groups-main {
-        flex: 3;
-        overflow-y: auto;
-        padding-right: 10px;
-        background: #f8f9fa;
-        border-radius: 8px;
-        padding: 15px;
-    }
-
-    .groups-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); /* Increased from 100px to 150px */
-        gap: 8px; /* Slightly larger gap */
-    }
-
-    /* Compact Group Box */
-    .group {
-        background: white;
-        border-radius: 6px;
-        border: 1px solid #dee2e6;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-        transition: all 0.2s ease;
-    }
-
-    /* Group completion states */
-    .group.complete {
-        background: #d4edda;  /* Light green background */
-        border-color: #28a745;  /* Green border */
-        box-shadow: 0 0 0 2px rgba(40, 167, 69, 0.2);
-        transition: all 0.2s ease;
-    }
-
-
-    .group.complete .group-objects:empty::after {
-        color: #28a745;
-        border-color: #28a745;
-    }
-
-    .group.highlight {
-        background: #D5EEFF;  /* Light orange background */
-        border-color: #0099FF;  /* Orange border */
-        box-shadow: 0 0 0 2px rgba(0, 153, 255, 0.2);
-        transition: all 0.2s ease;
-        padding: 0px;
-        margin-bottom: 0px;
-    }
-
-    .group.highlight .group-objects:empty::after {
-        color: #28a745;
-        border-color: #28a745;
-    }
-
-    .group.highlight2 {
-        background: #FBEAEC;  /* Light orange background */
-        border-color: #DC3545;  /* Orange border */
-        box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.2);
-        transition: all 0.2s ease;
-        padding: 0px;
-        margin-bottom: 0px;
-    }
-
-    .group.highlight2 .group-objects:empty::after {
-        color: #28a745;
-        border-color: #28a745;
-    }
-
-    .group-name {
-        font-weight: bold;
-        color: #2c3e50;
-    }
-
-    .group-count {
-        background: #595959;
-        color: white;
-        padding: 1px 4px;
-        border-radius: 8px;
-        font-size: 0.6rem;
-    }
-
-    .group-objects {
-        min-height: 60px;
-        display: grid;
-        grid-template-columns: repeat(3, 1fr); /* 3 columns in groups */
-        gap: 2px;
     }
 
     .action-btn {
@@ -381,105 +516,7 @@
         z-index: 3;
     }
 
-    /* Right Sidebar - Objects Pool */
-    .objects-sidebar {
-        flex: 1;
-        background: #f8f9fa;
-        border-radius: 8px;
-        padding: 15px;
-        display: flex;
-        flex-direction: column;
-        min-width: 200px;
-    }
-
-    .objects-sidebar h3 {
-        font-size: 1rem;
-        margin-top: 0;
-        margin-bottom: 10px;
-        color: #2c3e50;
-    }
-
-    .objects-container {
-        overflow-y: auto;
-        display: grid;
-        grid-template-columns: repeat(4, 1fr); /* 5 columns */
-        gap: 4px;
-        padding: 4px;
-    }
-
-    /* Compact Object Card - No Text */
-    .object-card {
-        border-radius: 4px;
-        cursor: move;
-        user-select: none;
-        transition: transform 0.1s, box-shadow 0.1s;
-        aspect-ratio: 1 / 1; /* Square cards */
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        padding: 2px;
-        position: relative;
-    }
-
-    .object-card:hover {
-        transform: translateY(-3px) scale(1.02);
-        box-shadow: 0 6px 12px rgba(0,0,0,0.3);
-        z-index: 10; /* Bring hovered card to front */
-        filter: brightness(1.1);
-    }
-
-    /* Sidebar header with sort controls */
-    .sidebar-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 10px;
-        flex-wrap: wrap;
-        gap: 8px;
-    }
-
-    .sidebar-header h3 {
-        margin: 0;
-        font-size: 1rem;
-    }
-
-    /* Simple lightweight loader */
-    .simple-loader {
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: rgba(0, 0, 0, 0.8);
-        color: white;
-        padding: 8px 16px;
-        border-radius: 30px;
-        font-size: 0.85rem;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        z-index: 10000;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-        backdrop-filter: blur(5px);
-        transition: opacity 0.3s ease;
-    }
-
-    .simple-loader.hidden {
-        opacity: 0;
-        pointer-events: none;
-    }
-
-    .simple-spinner {
-        width: 16px;
-        height: 16px;
-        border: 2px solid rgba(255,255,255,0.3);
-        border-radius: 50%;
-        border-top-color: white;
-        animation: spin 0.8s linear infinite;
-    }
-
-    @keyframes spin {
-        to { transform: rotate(360deg); }
-    }
+    /* Object Sorting */
 
     .sort-controls select {
         padding: 4px 8px;
@@ -499,72 +536,6 @@
         border-color: #595959;
     }
 
-    /* Alternative indicator */
-    .alt-indicator {
-        position: absolute;
-        top: 2px;
-        right: 2px;
-        font-size: 0.6rem;
-        background: rgba(255,255,255,0.9);
-        color: #2c3e50;
-        width: 14px;
-        height: 14px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.2);
-        cursor: help;
-        z-index: 2;
-    }
-
-    .object-card[data-has-alternatives="true"] {
-        cursor: pointer;
-    }
-
-    .object-card[data-has-alternatives="true"]:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-    }
-
-    /* Object Image */
-    .object-image {
-        width: 40px;
-        height: 40px;
-        object-fit: contain;
-        image-rendering: auto;
-        margin-bottom: 2px;
-    }
-
-    /* Property Indicator Dots */
-    .property-dots {
-        display: flex;
-        gap: 2px;
-        justify-content: center;
-        flex-wrap: wrap;
-        max-width: 100%;
-        padding: 0 2px;
-    }
-
-    .property-dot {
-        width: 6px;
-        height: 6px;
-        border-radius: 50%;
-        display: inline-block;
-        border: 1px solid rgba(255,255,255,0.5);
-        cursor: help;
-        flex-shrink: 0;
-    }
-
-    .more-props {
-        font-size: 0.5rem;
-        background: rgba(255,255,255,0.3);
-        padding: 1px 3px;
-        border-radius: 6px;
-        margin-left: 1px;
-        line-height: 1;
-    }
-
     /* Simple tooltip */
     .object-card {
         position: relative;
@@ -582,6 +553,37 @@
         text-transform: uppercase;
         letter-spacing: 0.5px;
         text-align: center;
+    }
+
+    /* Context Menu */
+    .context-menu {
+        display: none;
+        position: fixed;
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        z-index: 1000;
+        min-width: 150px;
+    }
+
+    .context-menu-header {
+        background: #f8f9fa;
+        padding: 8px 12px;
+        border-bottom: 1px solid #ddd;
+        font-weight: bold;
+        font-size: 0.8rem;
+        border-radius: 6px 6px 0 0;
+    }
+
+    .context-menu-content {
+        padding: 8px 12px;
+        font-size: 0.8rem;
+    }
+
+    .context-menu-content ul {
+        margin: 5px 0;
+        padding-left: 20px;
     }
 
     /* Property chips */
@@ -633,36 +635,6 @@
         margin-bottom: 4px;
     }
 
-    /* Context Menu */
-    .context-menu {
-        display: none;
-        position: fixed;
-        background: white;
-        border: 1px solid #ddd;
-        border-radius: 6px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-        z-index: 1000;
-        min-width: 150px;
-    }
-
-    .context-menu-header {
-        background: #f8f9fa;
-        padding: 8px 12px;
-        border-bottom: 1px solid #ddd;
-        font-weight: bold;
-        font-size: 0.8rem;
-        border-radius: 6px 6px 0 0;
-    }
-
-    .context-menu-content {
-        padding: 8px 12px;
-        font-size: 0.8rem;
-    }
-
-    .context-menu-content ul {
-        margin: 5px 0;
-        padding-left: 20px;
-    }
 
     /* Solution Popup Styles */
     .solution-popup {
@@ -1092,7 +1064,6 @@
         display:none;
     }
 
-
     .message.success { background: #d4edda; color: #155724; }
     .message.error { background: #f8d7da; color: #721c24; }
     .message.warning { background: #fff3cd; color: #856404; }
@@ -1115,9 +1086,44 @@
         border-radius: 3px;
     }
 
-/* ====================================
-   REMAINDER BOX STYLES
-   ==================================== */
+    /* Loading Notification */
+    .simple-loader {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 8px 16px;
+        border-radius: 30px;
+        font-size: 0.85rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        z-index: 10000;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        backdrop-filter: blur(5px);
+        transition: opacity 0.3s ease;
+    }
+
+    .simple-loader.hidden {
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    .simple-spinner {
+        width: 16px;
+        height: 16px;
+        border: 2px solid rgba(255,255,255,0.3);
+        border-radius: 50%;
+        border-top-color: white;
+        animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+    /* Remainder Box */
 
     .remainder-section {
         margin-top: 20px;
@@ -1153,7 +1159,7 @@
         border-radius: 8px;
         padding: 10px;
         min-height: 80px;
-        max-width: 160px; /* Limit width */
+        max-width: 160px;
     }
 
     .remainder-box .group-objects {
@@ -1163,63 +1169,13 @@
         max-height: 40px;
     }
 
-    /* Completion state for remainder box */
     .remainder-box.complete {
         background: #d4edda;
         border-color: #28a745;
     }
 
-    .remainder-box.complete .group-objects:empty::after {
-        color: #28a745;
-        border-color: #28a745;
-    }
+    /* Category Toggles */
 
-    .remainder-box .group-count {
-        background: #ff9800;
-    }
-
-    .remainder-box.complete .group-count {
-        background: #28a745;
-    }
-
-    /* ADD to Existing */
-    .object-card .category-values {
-        font-size: 0.6rem;
-        background: rgba(255,255,255,0.2);
-        padding: 1px 4px;
-        border-radius: 3px;
-        margin-top: 1px;
-        display: flex;
-        gap: 4px;
-    }
-
-    .category-value {
-        display: inline-block;
-    }
-
-    .category-value.cat1 { color: #ff8a80; }
-    .category-value.cat2 { color: #82b1ff; }
-    .category-value.cat3 { color: #b9f6ca; }
-    .category-value.cat4 { color: #82b1ff; }
-    .category-value.cat5 { color: #F2F2F2; }
-    .category-value.cat6 { color: #b9f6ca; }
-    .category-value.cat7 { color: #ff8a80; }
-    .category-value.cat8 { color: #82b1ff; }
-    .category-value.cat9 { color: #b9f6ca; }
-    .category-value.cat10 { color: #ff8a80; }
-    .category-value.cat11 { color: #82b1ff; }
-    .category-value.cat12 { color: #b9f6ca; }
-    .category-value.cat13 { color: #ff8a80; }
-    .category-value.cat14 { color: #82b1ff; }
-    .category-value.cat15 { color: #b9f6ca; }
-
-    .object-name,
-    .category-values,
-    .category-badge {
-        display: none;
-    }
-
-    /* Category Toggles - New Grid Layout */
     .category-toggles {
         background: #f8f9fa;
         border-radius: 8px;
@@ -1267,93 +1223,6 @@
         border-radius: 1px;
     }
 
-
-    /* Toggle button styles - now just a square checkbox */
-    .toggle-btn {
-        position: relative;
-        display: inline-block;
-        width: 32px;
-        height: 34px;
-        cursor: pointer;
-        border-radius: 6px;
-        transition: all 0.2s ease;
-    }
-
-    /* Hide default checkbox */
-    .toggle-btn input {
-        position: absolute;
-        opacity: 0;
-        cursor: pointer;
-        height: 0;
-        width: 0;
-    }
-
-    /* Custom checkbox - square */
-    .checkmark {
-        position: absolute;
-        top: 0;
-        left: 0;
-        height: 32px;
-        width: 32px;
-        background-color: #e9ecef;
-        border-radius: 16px;
-        transition: all 0.2s ease;
-        border: 2px solid transparent;
-    }
-
-
-    /* Category background colors for unchecked state */
-    .category-1 .checkmark { background-color: #FFD1D1; }
-    .category-2 .checkmark { background-color: #D9ECF3; }
-    .category-3 .checkmark { background-color: #BEF0C6; }
-    .category-4 .checkmark { background-color: #D5CADC; }
-    .category-5 .checkmark { background-color: #D9D9D9; }
-    .category-6 .checkmark { background-color: #F8D1FB; }
-    .category-7 .checkmark { background-color: #FBF8BD; }
-    .category-8 .checkmark { background-color: #f8bbd0; }
-    .category-9 .checkmark { background-color: #D5CADC; }
-    .category-10 .checkmark { background-color: #FFD1A3; }
-    .category-11 .checkmark { background-color: #F8D1FB; }
-
-    /* Hover state */
-    .toggle-btn:hover .checkmark {
-        transform: scale(1.1);
-        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-    }
-
-    /* Checked state - full color */
-    .toggle-btn input:checked ~ .checkmark {
-        background-color: currentColor;
-        border-color: white;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-    }
-
-    /* Checkmark indicator (white dot or check) */
-    .toggle-btn input:checked ~ .checkmark::after {
-        content: "✓";
-        position: absolute;
-        left: 50%;
-        top: 50%;
-        transform: translate(-50%, -50%);
-        color: white;
-        font-size: 1.2rem;
-        font-weight: bold;
-        text-shadow: 0 1px 2px rgba(0,0,0,0.2);
-    }
-
-    /* Category background colors for checked state */
-    .category-1 input:checked ~ .checkmark { background-color: #F14545; }
-    .category-2 input:checked ~ .checkmark { background-color: #8AC5DA; }
-    .category-3 input:checked ~ .checkmark { background-color: #6ADC7D; }
-    .category-4 input:checked ~ .checkmark { background-color: #AD97BB; }
-    .category-5 input:checked ~ .checkmark { background-color: #696969; }
-    .category-6 input:checked ~ .checkmark { background-color: #ED8CF4; }
-    .category-7 input:checked ~ .checkmark { background-color: #F5ED51; }
-    .category-8 input:checked ~ .checkmark { background-color: #ec407a; }
-    .category-9 input:checked ~ .checkmark { background-color: #AD97BB; }
-    .category-10 input:checked ~ .checkmark { background-color: #FF9F3F; }
-    .category-11 input:checked ~ .checkmark { background-color: #ED8CF4; }
-
     /* Category actions row */
     .category-actions {
         display: flex;
@@ -1388,6 +1257,40 @@
         margin-left: auto;
     }
 
+
+    /* Toggle buttons */
+    .toggle-btn {
+        position: relative;
+        display: inline-block;
+        width: 32px;
+        height: 34px;
+        cursor: pointer;
+        border-radius: 6px;
+        transition: all 0.2s ease;
+    }
+
+    /* Hide default checkbox */
+    .toggle-btn input {
+        position: absolute;
+        opacity: 0;
+        cursor: pointer;
+        height: 0;
+        width: 0;
+    }
+
+    /* Custom checkbox - square */
+    .checkmark {
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 32px;
+        width: 32px;
+        background-color: #e9ecef;
+        border-radius: 16px;
+        transition: all 0.2s ease;
+        border: 2px solid transparent;
+    }
+
     /* Responsive */
     @media (max-width: 768px) {
         .objects-container {
@@ -1409,7 +1312,7 @@
 
 <script>
 
-    // At the top of your script, initialize loader
+    // Initialize loader
     document.addEventListener('DOMContentLoaded', function() {
         // Show loader
         const loader = document.getElementById('simpleLoader');
@@ -1417,7 +1320,7 @@
     });
 
     // Game state
-    let allObjects = []; // Will be loaded from JSON
+    let allObjects = [];
     let objects = [];
     let groups = [];
     let draggedItem = null;
@@ -1440,7 +1343,8 @@
         { id: 8, name: 'Galar', source: 'GalarDex'},
         { id: 9, name: 'Hisui', source: 'HisuiDex'},
         { id: 10, name: 'Paldea', source: 'PaldeaDex'},
-        { id: 11, name: 'Lumiose', source: 'LumioseDex'}
+        { id: 11, name: 'Lumiose', source: 'LumioseDex'},
+        { id: 12, name: 'Champions', source: 'ChampionsDex'}
     ];
 
     let activeCategories = CATEGORIES.map(c => c.id);
@@ -1486,7 +1390,7 @@
             const data = await response.json();
             console.log('Raw data received:', data);
 
-            // Transform the data from your format
+            // Transform the data from JSON file
             allObjects = [];
             let objectCount = 0;
             const entries = Object.entries(data);
@@ -1505,6 +1409,7 @@
                 // Determine which categories this object belongs to (value > 0)
                 const categories = [];
                 CATEGORIES.forEach(cat => {
+                    console.log('Category:', categoryValues[`category${cat.id}`]);
                     if (categoryValues[`category${cat.id}`] != 0) {
                         categories.push(cat.id);
                     }
@@ -1983,21 +1888,7 @@
 
         // Store full object data for tooltip/context menu
         card.setAttribute('data-object-name', obj.name);
-        card.setAttribute('data-object-cat1', obj.KantoDex);
-        card.setAttribute('data-object-cat2', obj.JohtoDex);
-        card.setAttribute('data-object-cat3', obj.HoennDex);
-        card.setAttribute('data-object-cat4', obj.SinnohDex);
-        card.setAttribute('data-object-cat5', obj.UnovaDex);
-        card.setAttribute('data-object-cat6', obj.KalosDex);
-        card.setAttribute('data-object-cat7', obj.AlolaDex);
-        card.setAttribute('data-object-cat8', obj.AlolaDLC);
-        card.setAttribute('data-object-cat9', obj.GalarDex);
-        card.setAttribute('data-object-cat10', obj.GalarDLC);
-        card.setAttribute('data-object-cat11', obj.HisuiDex);
-        card.setAttribute('data-object-cat12', obj.PaldeaDex);
-        card.setAttribute('data-object-cat13', obj.PaldeaDLC);
-        card.setAttribute('data-object-cat14', obj.LumioseDex);
-        card.setAttribute('data-object-cat15', obj.LumioseDLC);
+        card.setAttribute('data-object-categories', obj.categories);
         if (obj.alternatives && obj.alternatives.length > 0) {
             card.setAttribute('data-has-alternatives', 'true');
         }
@@ -2425,19 +2316,7 @@
                     number: obj.number,
                     categories: obj.categories,
                     primaryCategory: obj.primaryCategory,
-                    category1: obj.category1,
-                    category2: obj.category2,
-                    category3: obj.category3,
-                    category4: obj.category4,
-                    category5: obj.category5,
-                    category6: obj.category6,
-                    category7: obj.category7,
-                    category8: obj.category8,
-                    category9: obj.category9,
-                    category10: obj.category10,
-                    category11: obj.category11,
-                    category12: obj.category12,
-                    category13: obj.category13,
+                    categories: obj.categories,
                     properties: obj.properties,
                     properties1: obj.properties1,
                     properties2: obj.properties2,
@@ -2507,7 +2386,7 @@
 
     // Update checkboxes to match activeCategories
     function updateCategoryCheckboxes() {
-        for (let i = 1; i <= 13; i++) {
+        for (let i = 1; i <= 20; i++) {
             const checkbox = document.getElementById(`cat${i}Toggle`);
             if (checkbox) {
                 checkbox.checked = activeCategories.includes(i);
@@ -2724,21 +2603,7 @@
             filename: altObj.filename || gameObj.filename,
             categories: altObj.categories,
             primaryCategory: altObj.primaryCategory,
-            KantoDex: altObj.KantoDex,
-            JohtoDex: altObj.JohtoDex,
-            HoennDex: altObj.HoennDex,
-            SinnohDex: altObj.SinnohDex,
-            UnovaDex: altObj.UnovaDex,
-            KalosDex: altObj.KalosDex,
-            AlolaDex: altObj.AlolaDex,
-            AlolaDLC: altObj.AlolaDLC,
-            GalarDex: altObj.GalarDex,
-            GalarDLC: altObj.GalarDLC,
-            HisuiDex: altObj.HisuiDex,
-            PaldeaDex: altObj.PaldeaDex,
-            PaldeaDLC: altObj.PaldeaDLC,
-            LumioseDex: altObj.LumioseDex,
-            LumioseDLC: altObj.LumioseDLC,
+            categories: altObj.categories,
             properties: altObj.properties,
             x2Eff: altObj.x2Eff,
             x4Eff: altObj.x4Eff,
