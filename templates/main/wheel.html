@@ -1481,7 +1481,7 @@
                     const genIds = pickRandom(Object.keys(REGION_NAMES).map(Number), count);
                     const names  = genIds.map(id => REGION_NAMES[id]);
                     this._desc = `Pokémon originally from ${names.join(', ')} have been removed.`;
-                    return (obj) => !obj.generations.some(g => genIds.includes(g));
+                    return (obj) => !obj.primaryGeneration.some(g => genIds.includes(g));
                 },
                 describe() { return this._desc; },
             },
