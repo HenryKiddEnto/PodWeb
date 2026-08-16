@@ -1314,7 +1314,7 @@
         7:  ['OU','Uber','UU','RU','NU','PU','ZU','LC'],
         8:  ['OU','Uber','UU','RU','NU','PU','ZU','LC'],
         9:  ['OU','Uber','UU','RU','NU','PU','ZU','LC'],
-        10: ['MA'],
+        10: ['MB','OU','Uber','UU'],
     };
 
     const MODE_NAMES = {
@@ -1323,12 +1323,11 @@
     };
 
     const MODE_ORDER = {
-        AG: '1', Uber: '2', OU: '3', UUBL: '4', UU: '5', RUBL: '6', RU: '7',
+        MB: '16', AG: '1', Uber: '2', OU: '3', UUBL: '4', UU: '5', RUBL: '6', RU: '7',
         NUBL: '8', NU: '9', PUBL: '10', PU: '11', ZUBL: '12', ZU: '13', NFE: '14', LC: '15',
-        MA: '16'
     };
 
-    const USAGE_ORDER = { 'Meta': 0, 'Viable': 1, 'Niche': 2, 'Unused': 3 };
+    const USAGE_ORDER = { 'Meta': 0, 'New': 1, 'Viable': 2, 'Niche': 3, 'Unused': 4 };
 
     const typeColours = {
         'Normal':   '#9099a1', 'Fire':     '#ff9c54', 'Water':    '#4d90d5',
@@ -1412,7 +1411,7 @@
                 name: 'Random Cull',
                 init() {
                     // Remove between 10 % and 75 % of the pool at random
-                    const keepChance = 0.25 + Math.random() * 0.65;
+                    const keepChance = 0.05 + Math.random() * 0.75;
                     return (obj) => Math.random() < keepChance;
                 },
                 describe() { return 'A random portion of Pokémon have been removed from the pool.'; },
@@ -1452,17 +1451,6 @@
             },
 
             {
-                name: 'Ban Alphabetical',
-                init() {
-                    const count = randInt(1, 5);
-                    const letters = pickRandom(ALL_LETTERS, count);
-                    this._desc = `Pokémon whose names begin with ${letters.sort().join(', ')} have been removed.`;
-                    return (obj) => !letters.includes(obj.name[0].toUpperCase());
-                },
-                describe() { return this._desc; },
-            },
-
-            {
                 name: 'Allow Region',
                 init() {
                     const count = randInt(1, 3);
@@ -1477,7 +1465,7 @@
             {
                 name: 'Ban Region',
                 init() {
-                    const count = randInt(1, 3);
+                    const count = randInt(1, 5);
                     const genIds = pickRandom(Object.keys(REGION_NAMES).map(Number), count);
                     const names  = genIds.map(id => REGION_NAMES[id]);
                     this._desc = `Pokémon originally from ${names.join(', ')} have been removed.`;
@@ -1692,7 +1680,7 @@
                     const poolAbilities = [...new Set(
                         objects.flatMap(o => o.abilities).filter(Boolean)
                     )];
-                    const count   = randInt(1, 5);
+                    const count   = randInt(2, 5);
                     const allowed = pickRandom(poolAbilities, count);
                     this._desc = `Only Pokémon with the ${allowed.join(' or ')} ability remain.`;
                     return (obj) => obj.abilities.some(a => allowed.includes(a));
@@ -1706,7 +1694,7 @@
                     const poolAbilities = [...new Set(
                         objects.flatMap(o => o.abilities).filter(Boolean)
                     )];
-                    const count  = randInt(1, 5);
+                    const count  = randInt(3, 10);
                     const banned = pickRandom(poolAbilities, count);
                     this._desc = `Pokémon with the ${banned.join(' or ')} ability have been removed.`;
                     return (obj) => !obj.abilities.some(a => banned.includes(a));
@@ -2328,6 +2316,7 @@
         };
 
         const modeIncludes = {
+            MB:   ['Uber','OU','UUBL','UU','RUBL','RU','NUBL','NU','PUBL','PU','ZUBL','ZU','NFE','LC'],
             OU:   ['OU','UUBL','UU','RUBL','RU','NUBL','NU','PUBL','PU','ZUBL','ZU','NFE','LC'],
             Uber: ['Uber','OU','UUBL','UU','RUBL','RU','NUBL','NU','PUBL','PU','ZUBL','ZU','NFE','LC'],
             UU:   ['UU','RUBL','RU','NUBL','NU','PUBL','PU','ZUBL','ZU','NFE','LC'],
@@ -2336,7 +2325,6 @@
             PU:   ['PU','ZUBL','ZU','NFE','LC'],
             ZU:   ['ZU','NFE','LC'],
             LC:   ['LC'],
-            MA:   ['MA'],
         };
 
         const allowed = modeIncludes[currentMode] || [];
