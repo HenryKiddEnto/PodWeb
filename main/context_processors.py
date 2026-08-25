@@ -7,6 +7,7 @@ def site_info(request):
         'sidebar_apps': [
             {'name': 'Type Challenge', 'url': '/typechallenge', 'icon': '🔥'},
             {'name': 'Mystery Wheels', 'url': '#', 'icon': '🛞'},
+            {'name': 'Matchup Grid', 'url': '/builder', 'icon': '📰'},
             {'name': 'Pod Press', 'url': '/blog', 'icon': '📰'},
             {'name': 'Gallery', 'url': '/gallery', 'icon': '🐝'},
         ]

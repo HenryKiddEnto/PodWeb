@@ -35,6 +35,25 @@ body {
     position: fixed;
     height: 100vh;
     overflow-y: auto;
+    transition: width 0.2s ease, padding 0.2s ease;
+}
+
+/* Collapse/expand toggle button */
+.sidebar-toggle {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 8px;
+    align-self: flex-end;
+    margin-bottom: 10px;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.sidebar-toggle:hover {
+    background-color: #595959;
 }
 
 /* Logo Container */
@@ -52,6 +71,7 @@ body {
     height: 260px;
     border-radius: 50%;
     object-fit: cover;
+    transition: width 0.2s ease, height 0.2s ease;
 }
 
 .site-title {
@@ -99,6 +119,65 @@ body {
     font-size: 1.2rem;
 }
 
+.app-icon {
+    display: inline-block;
+    margin-right: 10px;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+
+.app-label {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ====================================
+   SIDEBAR — COLLAPSED STATE
+   Toggled on <body>, not .sidebar directly, so .main-content can react
+   to the same class and keep its margin in sync.
+   ==================================== */
+
+body.sidebar-collapsed .sidebar {
+    width: 60px;
+    padding: 30px 10px;
+    overflow: hidden;
+}
+
+body.sidebar-collapsed .sidebar-toggle {
+    align-self: center;
+}
+
+body.sidebar-collapsed .app-label,
+body.sidebar-collapsed .apps-title,
+body.sidebar-collapsed .footer p {
+    display: none;
+}
+
+body.sidebar-collapsed .app-button {
+    justify-content: center;
+    padding-left: 0;
+    padding-right: 0;
+}
+
+body.sidebar-collapsed .app-icon {
+    margin-right: 0;
+}
+
+body.sidebar-collapsed .logo-image {
+    width: 32px;
+    height: 32px;
+}
+
+body.sidebar-collapsed .logo-container {
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+}
+
+body.sidebar-collapsed .main-content {
+    margin-left: 60px;
+}
+
 /* ====================================
    MAIN CONTENT AREA
    ==================================== */
@@ -109,6 +188,7 @@ body {
     padding: 40px;
     background-color: #fdfcf5;
     min-height: 100vh;
+    transition: margin-left 0.2s ease;
 }
 
 .content-card {
@@ -336,6 +416,12 @@ footer {
 
     /* Override for video homepage on mobile */
     .main-content:has(.video-container) {
+        margin-left: 0;
+    }
+
+    /* On mobile the sidebar isn't fixed/offset, so the collapsed
+       main-content override from the desktop rule doesn't apply here. */
+    body.sidebar-collapsed .main-content {
         margin-left: 0;
     }
 }

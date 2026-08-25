@@ -65,3 +65,32 @@ class GalleryPhoto(models.Model):
 
     def __str__(self):
         return self.title
+
+class MatchupUpload(models.Model):
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected'),
+    ]
+
+    submitted_at = models.DateTimeField(auto_now_add=True)
+    submitter_name = models.CharField(max_length=80, blank=True)
+    payload = models.JSONField()
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+    review_note = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ['-submitted_at']
+
+    def __str__(self):
+        name = self.submitter_name or 'anonymous'
+        return f"Upload from {name} ({self.status}) — {self.submitted_at:%Y-%m-%d %H:%M}"
+
+
+class GlobalDataset(models.Model):
+    data = models.JSONField(default=dict)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Global dataset ({len(self.data)} entries, updated {self.updated_at:%Y-%m-%d %H:%M})"

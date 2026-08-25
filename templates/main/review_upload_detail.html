@@ -1,0 +1,33 @@
+{% extends 'main/base.html' %}
+{% block content %}
+<h1>Reviewing upload from {{ upload.submitter_name|default:"anonymous" }}</h1>
+<p>Submitted {{ upload.submitted_at }}</p>
+
+<form method="post">
+    {% csrf_token %}
+    <table border="1" cellpadding="6">
+        <thead>
+            <tr>
+                <th>Include?</th>
+                <th>Key</th>
+                <th>Current (global)</th>
+                <th>Incoming</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in diff_rows %}
+            <tr>
+                <td><input type="checkbox" name="accept_key" value="{{ row.key }}"
+                            {% if row.is_new %}checked{% endif %}></td>
+                <td>{{ row.key }}</td>
+                <td><pre>{{ row.current|default:"— nothing yet —" }}</pre></td>
+                <td><pre>{{ row.incoming }}</pre></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <label>Review note (optional): <input type="text" name="review_note"></label>
+    <button type="submit">Save decisions</button>
+</form>
+{% endblock %}

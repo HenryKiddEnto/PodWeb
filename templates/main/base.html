@@ -12,9 +12,23 @@
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
 <body>
+    <!-- Apply the saved collapsed state immediately, before the sidebar
+         paints, so there's no visible flash of the expanded sidebar on
+         every page load/navigation. -->
+    <script>
+        if (localStorage.getItem('sidebarCollapsed') === 'true') {
+            document.body.classList.add('sidebar-collapsed');
+        }
+    </script>
+
     <div class="layout">
         <!-- Sidebar -->
         <div class="sidebar">
+            <!-- Collapse/expand toggle -->
+            <button class="sidebar-toggle" id="sidebarToggle" aria-label="Collapse sidebar" title="Collapse sidebar">
+                ↔
+            </button>
+
             <!-- Logo Container -->
             <a href="{% url 'home' %}" class="logo-link" title="Go to homepage">
                 <div class="logo-container">
@@ -26,24 +40,32 @@
             <!-- Apps Section (Sidebar Buttons) -->
             <div class="apps-section">
                 <div class="apps-title">Tools</div>
-
                 {% for app in sidebar_apps %}
-                <a href="{{ app.url }}" class="app-button">
-                    {{ app.icon }} {{ app.name }}
+                <a href="{{ app.url }}" class="app-button" title="{{ app.name }}">
+                    <span class="app-icon">{{ app.icon }}</span>
+                    <span class="app-label">{{ app.name }}</span>
                 </a>
                 {% empty %}
                 <!-- Default apps -->
-                <a href="{% url 'typechallenge' %}" class="app-button">
-                    🔥 Type Challenge
+                <a href="{% url 'typechallenge' %}" class="app-button" title="Type Challenge">
+                    <span class="app-icon">🔥</span>
+                    <span class="app-label">Type Challenge</span>
                 </a>
-                <a href="{% url 'wheel' %}" class="app-button">
-                    🛞 Teambuilding Wheel
+                <a href="{% url 'wheel' %}" class="app-button" title="Teambuilding Wheel">
+                    <span class="app-icon">🛞</span>
+                    <span class="app-label">Teambuilding Wheel</span>
                 </a>
-                <a href="{% url 'blog' %}" class="app-button">
-                    📰 Pod Press
+                <a href="{% url 'builder' %}" class="app-button" title="Matchup Grid">
+                    <span class="app-icon">🧮</span>
+                    <span class="app-label">Matchup Grid</span>
                 </a>
-                <a href="{% url 'gallery' %}" class="app-button">
-                    🐝 Wasp Gallery
+                <a href="{% url 'blog' %}" class="app-button" title="Pod Press">
+                    <span class="app-icon">📰</span>
+                    <span class="app-label">Pod Press</span>
+                </a>
+                <a href="{% url 'gallery' %}" class="app-button" title="Wasp Gallery">
+                    <span class="app-icon">🐝</span>
+                    <span class="app-label">Wasp Gallery</span>
                 </a>
                 {% endfor %}
             </div>
@@ -51,7 +73,6 @@
                 <p>&copy; 2026 Parasitoid Pod</p>
             </div>
         </div>
-
         <div class="main-content">
             <div class="content-card">
                 {% block content %}
@@ -60,5 +81,16 @@
             </div>
         </div>
     </div>
+
+    <script>
+        (function() {
+            var toggleBtn = document.getElementById('sidebarToggle');
+            toggleBtn.addEventListener('click', function() {
+                var isCollapsed = document.body.classList.toggle('sidebar-collapsed');
+                localStorage.setItem('sidebarCollapsed', isCollapsed);
+            });
+        })();
+    </script>
+    <meta> {% csrf_token %}
 </body>
 </html>

@@ -1,0 +1,30 @@
+<!-- main/review_uploads.html -->
+{% extends 'main/base.html' %}
+{% block content %}
+<h1>Pending matchup uploads</h1>
+
+{% if uploads %}
+<table border="1" cellpadding="6">
+    <thead>
+        <tr>
+            <th>Submitted</th>
+            <th>From</th>
+            <th># Entries</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for upload in uploads %}
+        <tr>
+            <td>{{ upload.submitted_at }}</td>
+            <td>{{ upload.submitter_name|default:"anonymous" }}</td>
+            <td>{{ upload.payload|length }}</td>
+            <td><a href="{% url 'review_upload_detail' upload.id %}">Review</a></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>No pending uploads.</p>
+{% endif %}
+{% endblock %}

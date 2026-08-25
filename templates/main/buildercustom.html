@@ -1,0 +1,1888 @@
+{% extends 'main/base.html' %}
+{% load static %}
+
+{% block title %}Matchup Grid{% endblock %}
+
+{% block content %}
+<div class="mg-app">
+
+    <!-- ============================================================
+         HEADER / CONTROLS
+         ============================================================ -->
+    <header class="mg-header">
+        <div class="mg-title-block">
+            <h1 class="mg-title">Matchup Grid</h1>
+            <p class="mg-subtitle">Champions draft analysis board</p>
+        </div>
+
+        <div class="mg-controls">
+            <div class="mg-control-group">
+                <label class="mg-label" for="metagameSelect">Metagame</label>
+                <select id="metagameSelect" class="mg-select" onchange="onControlsChanged()">
+                    <option value="singlesusage">Champions Singles</option>
+                    <option value="doublesusage">Champions Doubles</option>
+                    <option value="champusage">Champions OU (Showdown)</option>
+                    <option value="oversedsvusage">SV OU (Showdown)</option>
+                </select>
+            </div>
+
+            <button class="mg-btn" onclick="openTeamPanel()">✏️ Enter Teams</button>
+            <button class="mg-btn" id="clearTeamsBtn" onclick="clearTeams()" style="display:none;">✕ Clear Teams</button>
+
+            <div class="mg-spacer"></div>
+
+            <span class="mg-count" id="mgCount"></span>
+
+            <button class="mg-btn mg-btn-ghost" onclick="downloadData()">⬇ Export</button>
+            <label class="mg-btn mg-btn-ghost mg-file-label">
+                ⬆ Import
+                <input type="file" id="restoreFileInput" accept=".json" style="display:none;" onchange="restoreData(event)">
+            </label>
+        </div>
+    </header>
+
+    <!-- ============================================================
+         MANUAL ADDITIONS — bring in Pokémon outside Meta/Viable
+         ============================================================ -->
+    <div class="mg-manual-row">
+        <label class="mg-label" for="manualAddInput">Add specific Pokémon</label>
+        <input type="text" id="manualAddInput" class="mg-manual-input"
+               placeholder="Type a name and press Enter…" onkeydown="onManualAddKeydown(event)">
+        <button class="mg-btn mg-btn-ghost" onclick="addManualPokemonFromInput()">+ Add</button>
+        <div class="mg-manual-chips" id="manualChips"></div>
+    </div>
+
+    <!-- ============================================================
+         TEAM ENTRY PANEL (slide-down)
+         ============================================================ -->
+    <div id="teamPanel" class="mg-team-panel" style="display:none;">
+        <div class="mg-team-col">
+            <label class="mg-label">Team A (rows)</label>
+            <textarea id="teamAInput" class="mg-textarea" placeholder="One Pokémon per line, or comma-separated.&#10;e.g.&#10;Landorus-Therian&#10;Corviknight&#10;Dragapult"></textarea>
+        </div>
+        <div class="mg-team-col">
+            <label class="mg-label">Team B (columns)</label>
+            <textarea id="teamBInput" class="mg-textarea" placeholder="Leave blank to mirror Team A, or enter an opposing roster of 12+."></textarea>
+        </div>
+        <div class="mg-team-actions">
+            <button class="mg-btn mg-btn-primary" onclick="applyTeams()">Apply</button>
+            <button class="mg-btn mg-btn-ghost" onclick="closeTeamPanel()">Cancel</button>
+            <p class="mg-team-hint" id="teamMatchHint"></p>
+        </div>
+    </div>
+
+    <!-- ============================================================
+         GRID
+         ============================================================ -->
+    <div class="mg-grid-wrap" id="mgGridWrap">
+        <div class="mg-loading" id="mgLoading">Loading roster…</div>
+        <table class="mg-grid" id="mgGrid" style="display:none;">
+            <thead id="mgThead"></thead>
+            <tbody id="mgTbody"></tbody>
+        </table>
+    </div>
+
+    <div class="mg-legend">
+        <span class="mg-legend-item"><span class="mg-swatch mg-swatch-a"></span> Row favoured</span>
+        <span class="mg-legend-item"><span class="mg-swatch mg-swatch-even"></span> Even</span>
+        <span class="mg-legend-item"><span class="mg-swatch mg-swatch-b"></span> Column favoured</span>
+        <span class="mg-legend-item"><span class="mg-swatch mg-swatch-empty"></span> Not yet analysed</span>
+    </div>
+
+</div>
+
+<!-- ============================================================
+     MATCHUP MODAL
+     ============================================================ -->
+<div id="matchupModal" class="mg-modal-overlay" style="display:none;">
+    <div class="mg-modal">
+        <button class="mg-modal-close" onclick="closeMatchupModal()">✕</button>
+
+        <div class="mg-modal-header">
+            <div class="mg-modal-mon" id="modalMonA">
+                <img id="modalImgA" class="mg-modal-sprite" src="" alt="">
+                <span id="modalNameA" class="mg-modal-name"></span>
+            </div>
+            <span class="mg-modal-vs">VS</span>
+            <div class="mg-modal-mon" id="modalMonB">
+                <img id="modalImgB" class="mg-modal-sprite" src="" alt="">
+                <span id="modalNameB" class="mg-modal-name"></span>
+            </div>
+        </div>
+
+        <div class="mg-modal-body">
+
+            <!-- Favour slider -->
+            <div class="mg-field">
+                <label class="mg-field-label">Who's favoured?</label>
+                <div class="mg-slider-row">
+                    <span class="mg-slider-end" id="sliderLabelA"></span>
+                    <div class="mg-slider-track-wrap">
+                        <span class="mg-slider-tick"></span>
+                        <input type="range" id="favorSlider" class="mg-slider" min="-100" max="100" value="0" step="5" oninput="onSliderInput()">
+                    </div>
+                    <span class="mg-slider-end" id="sliderLabelB"></span>
+                </div>
+                <div class="mg-slider-readout" id="sliderReadout">Even</div>
+            </div>
+
+            <!-- Speed comparison -->
+            <div class="mg-field">
+                <label class="mg-field-label">Speed comparison <span class="mg-speed-sublabel">(Lv. 50 ranges)</span></label>
+                <div class="mg-speed-grid">
+                    <div class="mg-speed-col">
+                        <span class="mg-speed-name" id="speedNameA"></span>
+                        <span class="mg-speed-base" id="speedBaseA"></span>
+                        <span class="mg-speed-range" id="speedRangeA"></span>
+                    </div>
+                    <div class="mg-speed-vs">vs</div>
+                    <div class="mg-speed-col">
+                        <span class="mg-speed-name" id="speedNameB"></span>
+                        <span class="mg-speed-base" id="speedBaseB"></span>
+                        <span class="mg-speed-range" id="speedRangeB"></span>
+                    </div>
+                </div>
+                <div class="mg-speed-verdict" id="speedVerdict"></div>
+            </div>
+
+            <!-- Notes — twin columns, one per Pokémon -->
+            <div class="mg-notes-grid">
+                <div class="mg-notes-col">
+                    <span class="mg-notes-col-header" id="notesHeaderA"></span>
+                    <div class="mg-field">
+                        <label class="mg-field-label">Game Plan</label>
+                        <textarea id="noteA_gameplan" class="mg-note" placeholder="How to play this matchup…" oninput="scheduleAutosave()"></textarea>
+                    </div>
+                    <div class="mg-field">
+                        <label class="mg-field-label">Tech Options</label>
+                        <textarea id="noteA_tech" class="mg-note" placeholder="Sets, items, or moves worth considering…" oninput="scheduleAutosave()"></textarea>
+                    </div>
+                    <div class="mg-field">
+                        <label class="mg-field-label">Notes</label>
+                        <textarea id="noteA_notes" class="mg-note" placeholder="Anything else worth remembering…" oninput="scheduleAutosave()"></textarea>
+                    </div>
+                </div>
+                <div class="mg-notes-col">
+                    <span class="mg-notes-col-header" id="notesHeaderB"></span>
+                    <div class="mg-field">
+                        <label class="mg-field-label">Game Plan</label>
+                        <textarea id="noteB_gameplan" class="mg-note" placeholder="How to play this matchup…" oninput="scheduleAutosave()"></textarea>
+                    </div>
+                    <div class="mg-field">
+                        <label class="mg-field-label">Tech Options</label>
+                        <textarea id="noteB_tech" class="mg-note" placeholder="Sets, items, or moves worth considering…" oninput="scheduleAutosave()"></textarea>
+                    </div>
+                    <div class="mg-field">
+                        <label class="mg-field-label">Notes</label>
+                        <textarea id="noteB_notes" class="mg-note" placeholder="Anything else worth remembering…" oninput="scheduleAutosave()"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Damage calculator -->
+            <div class="mg-field">
+                <label class="mg-field-label">
+                    Damage calculator
+                    <button class="mg-inline-link mg-swap-btn" onclick="swapCalcDirection()">⇄ swap attacker</button>
+                </label>
+
+                <div class="mg-calc-panel">
+                    <div class="mg-calc-summary" id="calcSummary"></div>
+
+                    <div class="mg-calc-row">
+                        <div class="mg-calc-field">
+                            <label class="mg-calc-label">Move</label>
+                            <select id="calcMoveSelect" class="mg-select mg-select-wide" onchange="onMoveSelected()">
+                                <option value="">— choose a move —</option>
+                            </select>
+                        </div>
+                        <div class="mg-calc-field">
+                            <label class="mg-calc-label">Level</label>
+                            <input type="number" id="calcLevel" class="mg-num" min="1" max="100" value="100" oninput="runCalc()">
+                        </div>
+                    </div>
+
+                    <div class="mg-calc-row">
+                        <div class="mg-calc-field">
+                            <label class="mg-calc-label">Power</label>
+                            <input type="number" id="calcPower" class="mg-num" min="0" max="250" value="80" oninput="runCalc()">
+                        </div>
+                        <div class="mg-calc-field">
+                            <label class="mg-calc-label">Type</label>
+                            <select id="calcType" class="mg-select" onchange="runCalc()"></select>
+                        </div>
+                        <div class="mg-calc-field">
+                            <label class="mg-calc-label">Category</label>
+                            <select id="calcCategory" class="mg-select" onchange="runCalc()">
+                                <option value="Physical">Physical</option>
+                                <option value="Special">Special</option>
+                            </select>
+                        </div>
+                        <div class="mg-calc-field mg-calc-crit">
+                            <label class="mg-calc-label">
+                                <input type="checkbox" id="calcCrit" onchange="runCalc()"> Critical hit
+                            </label>
+                        </div>
+                    </div>
+
+                    <p class="mg-calc-source" id="calcSource"></p>
+
+                    <div class="mg-calc-stats-grid">
+                        <div class="mg-calc-mon-stats">
+                            <span class="mg-calc-mon-label" id="calcAtkName"></span>
+                            <div class="mg-calc-stat-row">
+                                <label>EVs</label>
+                                <input type="number" id="calcAtkEV" class="mg-num-sm" min="0" max="252" step="4" value="252" oninput="runCalc()">
+                                <label>Nature</label>
+                                <select id="calcAtkNature" class="mg-select-sm" onchange="runCalc()">
+                                    <option value="1.1">+</option>
+                                    <option value="1.0" selected>Neutral</option>
+                                    <option value="0.9">−</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mg-calc-mon-stats">
+                            <span class="mg-calc-mon-label" id="calcDefName"></span>
+                            <div class="mg-calc-stat-row">
+                                <label>EVs</label>
+                                <input type="number" id="calcDefEV" class="mg-num-sm" min="0" max="252" step="4" value="0" oninput="runCalc()">
+                                <label>Nature</label>
+                                <select id="calcDefNature" class="mg-select-sm" onchange="runCalc()">
+                                    <option value="1.1">+</option>
+                                    <option value="1.0" selected>Neutral</option>
+                                    <option value="0.9">−</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mg-calc-result" id="calcResult">Choose a move to calculate.</div>
+                </div>
+            </div>
+
+            <div class="mg-modal-footer">
+                <span class="mg-save-status" id="saveStatus"></span>
+                <button class="mg-btn mg-btn-primary" onclick="saveMatchup()">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+
+    /* ============================================================
+       TOKENS
+       ============================================================ */
+    .mg-app {
+        --mg-bg:        #404040;
+        --mg-bg-panel:  #595959;
+        --mg-bg-raised: #fdfcf5;
+        --mg-border:    #3a4258;
+        --mg-text:      #e8eaf0;
+        --mg-text-dim:  #e8eaf0;
+        --mg-text-dark:  #404040;
+        --mg-accent:    #e0a458;
+        --mg-accent-dim: #b8873f;
+        --mg-favor-a:   #4a90d9;   /* row favoured — cool blue */
+        --mg-favor-b:   #d9614a;   /* column favoured — warm red */
+        --mg-favor-even: #4a4f5f;
+
+        background: var(--mg-bg);
+        color: var(--mg-text);
+        font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        padding: 20px 24px 10px;
+        min-height: 85vh;
+        box-sizing: border-box;
+    }
+
+    /* ============================================================
+       HEADER
+       ============================================================ */
+    .mg-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 16px;
+        margin-bottom: 0px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid var(--mg-border);
+    }
+
+    .mg-title {
+        font-family: Georgia, 'Times New Roman', serif;
+        font-size: 1.7rem;
+        font-weight: 700;
+        margin: 0;
+        letter-spacing: 0.3px;
+        color: var(--mg-text);
+    }
+
+    .mg-subtitle {
+        margin: 2px 0 0;
+        font-size: 0.82rem;
+        color: var(--mg-text-dim);
+        letter-spacing: 0.4px;
+        text-transform: uppercase;
+    }
+
+    .mg-controls {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        flex: 1;
+        justify-content: flex-end;
+    }
+
+    .mg-control-group { display: flex; flex-direction: column; gap: 3px; }
+
+    .mg-label {
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--mg-text-dim);
+    }
+
+    .mg-select {
+        background: var(--mg-bg-raised);
+        border: 1px solid var(--mg-border);
+        color: var(--mg-text-dark);
+        padding: 6px 10px;
+        border-radius: 6px;
+        font-size: 0.85rem;
+        cursor: pointer;
+    }
+
+    .mg-spacer { flex: 1; min-width: 8px; }
+
+    .mg-count {
+        font-size: 0.78rem;
+        color: var(--mg-text-dim);
+        white-space: nowrap;
+    }
+
+    .mg-btn {
+        background: var(--mg-accent);
+        color: #1a1f2e;
+        border: none;
+        padding: 8px 14px;
+        border-radius: 6px;
+        font-size: 0.82rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.15s;
+        white-space: nowrap;
+    }
+
+    .mg-btn:hover { background: #ecb672; }
+
+    .mg-btn-ghost {
+        background: transparent;
+        border: 1px solid var(--mg-border);
+        color: var(--mg-text-dim);
+    }
+
+    .mg-btn-ghost:hover { background: var(--mg-bg-raised); color: var(--mg-text); }
+
+    .mg-btn-primary { background: var(--mg-accent); color: #1a1f2e; }
+
+    .mg-file-label { display: inline-flex; align-items: center; }
+
+    /* ============================================================
+       TEAM PANEL
+       ============================================================ */
+    .mg-team-panel {
+        display: flex;
+        gap: 16px;
+        background: var(--mg-bg-panel);
+        border: 1px solid var(--mg-border);
+        border-radius: 10px;
+        padding: 16px;
+        margin-bottom: 18px;
+        flex-wrap: wrap;
+    }
+
+    .mg-team-col { flex: 1; min-width: 220px; display: flex; flex-direction: column; gap: 6px; }
+
+    .mg-textarea {
+        background: var(--mg-bg-raised);
+        border: 1px solid var(--mg-border);
+        color: var(--mg-text-dark);
+        border-radius: 6px;
+        padding: 10px;
+        font-size: 0.82rem;
+        min-height: 130px;
+        resize: vertical;
+        font-family: inherit;
+    }
+
+    .mg-team-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        justify-content: flex-start;
+        min-width: 140px;
+    }
+
+    .mg-team-hint {
+        font-size: 0.75rem;
+        color: var(--mg-text-dark);
+        margin: 0;
+        max-width: 220px;
+    }
+
+    /* ============================================================
+       MANUAL ADDITIONS
+       ============================================================ */
+    .mg-manual-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-bottom: 14px;
+    }
+
+    .mg-manual-input {
+        background: var(--mg-bg-raised);
+        border: 1px solid var(--mg-border);
+        color: var(--mg-text-dark);
+        padding: 6px 10px;
+        border-radius: 6px;
+        font-size: 0.82rem;
+        width: 200px;
+    }
+
+    .mg-manual-chips {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+    }
+
+    .mg-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        background: var(--mg-bg-raised);
+        border: 1px solid var(--mg-accent-dim);
+        color: var(--mg-text-dark);
+        padding: 3px 8px;
+        border-radius: 14px;
+        font-size: 0.75rem;
+    }
+
+    .mg-chip button {
+        background: none;
+        border: none;
+        color: var(--mg-text-dim);
+        cursor: pointer;
+        font-size: 0.75rem;
+        padding: 0;
+        line-height: 1;
+    }
+
+    .mg-chip button:hover { color: var(--mg-favor-b); }
+
+    /* ============================================================
+       GRID
+       ============================================================ */
+    .mg-grid-wrap {
+        overflow: auto;
+        border: 1px solid var(--mg-border);
+        border-radius: 10px;
+        background: var(--mg-bg-panel);
+        max-height: 62vh;
+        position: relative;
+    }
+
+    .mg-loading {
+        padding: 60px;
+        text-align: center;
+        color: var(--mg-text-dim);
+        font-size: 0.9rem;
+    }
+
+    .mg-grid {
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    .mg-grid th, .mg-grid td {
+        border-right: 1px solid var(--mg-border);
+        border-bottom: 1px solid var(--mg-border);
+    }
+
+    /* Corner cell */
+    .mg-corner {
+        position: sticky;
+        top: 0;
+        left: 0;
+        z-index: 30;
+        background: var(--mg-bg-panel);
+        width: 44px;
+        min-width: 44px;
+    }
+
+    /* Column headers */
+    .mg-col-head {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        background: var(--mg-bg-panel);
+        width: 40px;
+        min-width: 40px;
+        max-width: 40px;
+        padding: 4px 2px;
+        text-align: center;
+        vertical-align: bottom;
+    }
+
+    .mg-col-head-inner {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2px;
+    }
+
+    .mg-col-head img { width: 28px; height: 28px; object-fit: contain; }
+
+    .mg-col-head-label {
+        writing-mode: vertical-rl;
+        transform: rotate(180deg);
+        font-size: 0.62rem;
+        color: var(--mg-text-dim);
+        white-space: nowrap;
+        max-height: 90px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* Row headers */
+    .mg-row-head {
+        position: sticky;
+        left: 0;
+        z-index: 10;
+        background: var(--mg-bg-panel);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 3px 8px 3px 4px;
+        white-space: nowrap;
+        min-width: 140px;
+    }
+
+    .mg-row-head img { width: 26px; height: 26px; object-fit: contain; flex-shrink: 0; }
+
+    .mg-row-head-label { font-size: 0.75rem; color: var(--mg-text); }
+
+    /* Tier divider rows/cols get a slightly stronger border */
+    .mg-tier-divider-row td, .mg-tier-divider-row th { border-top: 2px solid var(--mg-accent-dim); }
+    .mg-tier-divider-col { border-left: 2px solid var(--mg-accent-dim) !important; }
+
+    /* Cells */
+    .mg-cell {
+        width: 40px;
+        height: 34px;
+        min-width: 40px;
+        max-width: 40px;
+        cursor: pointer;
+        position: relative;
+        transition: filter 0.1s;
+    }
+
+    .mg-cell:hover { filter: brightness(1.25); }
+
+    .mg-cell-diagonal {
+        background: repeating-linear-gradient(
+            45deg,
+            #20263500,
+            #20263500 4px,
+            #ffffff08 4px,
+            #ffffff08 8px
+        );
+        cursor: default;
+    }
+
+    .mg-cell-diagonal:hover { filter: none; }
+
+    .mg-cell-dot {
+        position: absolute;
+        top: 3px;
+        right: 3px;
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: var(--mg-accent);
+        box-shadow: 0 0 3px rgba(224,164,88,0.8);
+    }
+
+    /* ============================================================
+       LEGEND
+       ============================================================ */
+    .mg-legend {
+        display: flex;
+        gap: 20px;
+        margin-top: 12px;
+        flex-wrap: wrap;
+        font-size: 0.78rem;
+        color: var(--mg-text-dim);
+    }
+
+    .mg-legend-item { display: flex; align-items: center; gap: 6px; }
+
+    .mg-swatch {
+        width: 14px;
+        height: 14px;
+        border-radius: 3px;
+        display: inline-block;
+    }
+
+    .mg-swatch-a     { background: var(--mg-favor-a); }
+    .mg-swatch-even  { background: var(--mg-favor-even); }
+    .mg-swatch-b     { background: var(--mg-favor-b); }
+    .mg-swatch-empty { background: var(--mg-bg-raised); border: 1px dashed var(--mg-border); }
+
+    /* ============================================================
+       MODAL
+       ============================================================ */
+    .mg-modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(10,12,18,0.72);
+        z-index: 40000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+
+    .mg-modal {
+        background: #fdfcf5;
+        border: 1px solid var(--mg-border);
+        border-radius: 14px;
+        width: 100%;
+        max-width: 640px;
+        max-height: 80vh;
+        overflow-y: auto;
+        position: relative;
+        box-shadow: 0 30px 80px rgba(0,0,0,0.5);
+        color: #404040;
+    }
+
+    .mg-modal-close {
+        position: absolute;
+        top: 14px;
+        right: 14px;
+        background: transparent;
+        border: none;
+        color: var(--mg-text-dim);
+        font-size: 1.1rem;
+        cursor: pointer;
+        z-index: 5;
+    }
+
+    .mg-modal-close:hover { color: var(--mg-text); }
+
+    .mg-modal-header {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 24px;
+        padding: 28px 24px 20px;
+        border-bottom: 1px solid var(--mg-border);
+    }
+
+    .mg-modal-mon {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .mg-modal-sprite { width: 64px; height: 64px; object-fit: contain; }
+
+    .mg-modal-name { font-size: 0.9rem; font-weight: 600; }
+
+    .mg-modal-vs {
+        font-family: Georgia, serif;
+        font-style: italic;
+        color: #fdfcf5;
+        font-size: 0.9rem;
+    }
+
+    .mg-modal-body { padding: 20px 24px 24px; display: flex; flex-direction: column; gap: 20px; }
+
+    .mg-field { display: flex; flex-direction: column; gap: 6px; }
+
+    .mg-field-label {
+        font-size: 0.78rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        color: var(--mg-text-dark);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .mg-inline-link {
+        color: var(--mg-accent);
+        text-decoration: none;
+        font-size: 0.72rem;
+        text-transform: none;
+        letter-spacing: 0;
+        font-weight: 400;
+    }
+
+    .mg-inline-link:hover { text-decoration: underline; }
+
+    .mg-slider-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .mg-slider-end {
+        font-size: 0.75rem;
+        color: var(--mg-text-dark);
+        white-space: nowrap;
+        min-width: 70px;
+    }
+
+    #sliderLabelB { text-align: right; }
+
+    .mg-slider-track-wrap {
+        position: relative;
+        flex: 1;
+        display: flex;
+        align-items: center;
+    }
+
+    .mg-slider-tick {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        width: 2px;
+        height: 14px;
+        background: rgba(255,255,255,0.5);
+        pointer-events: none;
+        z-index: 1;
+    }
+
+    .mg-slider {
+        flex: 1;
+        -webkit-appearance: none;
+        appearance: none;
+        height: 10px;
+        border-radius: 5px;
+        background: linear-gradient(90deg, var(--mg-favor-a), var(--mg-favor-even), var(--mg-favor-b));
+        border: 1px solid rgba(0,0,0,0.15);
+        outline: none;
+        cursor: pointer;
+    }
+
+    .mg-slider::-webkit-slider-runnable-track {
+        height: 10px;
+        border-radius: 5px;
+        background: linear-gradient(90deg, var(--mg-favor-a), var(--mg-favor-even), var(--mg-favor-b));
+    }
+
+    .mg-slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: #fff;
+        border: 3px solid var(--mg-accent);
+        cursor: pointer;
+        margin-top: -6px;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.5);
+        position: relative;
+        z-index: 2;
+    }
+
+    .mg-slider::-moz-range-track {
+        height: 10px;
+        border-radius: 5px;
+        background: linear-gradient(90deg, var(--mg-favor-a), var(--mg-favor-even), var(--mg-favor-b));
+        border: 1px solid rgba(255,255,255,0.15);
+    }
+
+    .mg-slider::-moz-range-thumb {
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: #fff;
+        border: 3px solid var(--mg-accent);
+        cursor: pointer;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.5);
+    }
+
+    .mg-slider-readout {
+        text-align: center;
+        font-size: 0.8rem;
+        color: var(--mg-text);
+        font-weight: 600;
+    }
+
+    .mg-speed-sublabel {
+        text-transform: none;
+        letter-spacing: 0;
+        font-weight: 400;
+        color: var(--mg-text-dim);
+        font-size: 0.7rem;
+    }
+
+    .mg-speed-grid {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: center;
+        gap: 12px;
+        background: var(--mg-bg-raised);
+        border: 1px solid var(--mg-border);
+        border-radius: 8px;
+        padding: 12px;
+    }
+
+    .mg-speed-col {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 3px;
+    }
+
+    .mg-speed-name {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: var(--mg-text);
+    }
+
+    .mg-speed-base {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: var(--mg-accent);
+        font-family: Georgia, serif;
+    }
+
+    .mg-speed-range {
+        font-size: 0.72rem;
+        color: var(--mg-text-dim);
+    }
+
+    .mg-speed-vs {
+        font-family: Georgia, serif;
+        font-style: italic;
+        color: var(--mg-text-dim);
+        font-size: 0.8rem;
+    }
+
+    .mg-speed-verdict {
+        text-align: center;
+        font-size: 0.76rem;
+        color: var(--mg-text-dim);
+        margin-top: 6px;
+    }
+
+    .mg-swap-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 0;
+    }
+
+    .mg-calc-panel {
+        background: var(--mg-bg-raised);
+        border: 1px solid var(--mg-border);
+        border-radius: 8px;
+        padding: 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .mg-calc-summary {
+        font-size: 0.8rem;
+        color: var(--mg-text-dim);
+    }
+
+    .mg-calc-row {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: flex-end;
+    }
+
+    .mg-calc-field { display: flex; flex-direction: column; gap: 3px; }
+
+    .mg-calc-label {
+        font-size: 0.68rem;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        color: var(--mg-text-dim);
+    }
+
+    .mg-calc-crit .mg-calc-label {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        text-transform: none;
+        letter-spacing: 0;
+        font-size: 0.8rem;
+        color: var(--mg-text);
+    }
+
+    .mg-num, .mg-num-sm {
+        background: var(--mg-bg-panel);
+        border: 1px solid var(--mg-border);
+        color: var(--mg-text);
+        border-radius: 5px;
+        padding: 5px 8px;
+        font-size: 0.82rem;
+        width: 70px;
+    }
+
+    .mg-num-sm { width: 56px; }
+
+    .mg-select-wide { min-width: 180px; }
+
+    .mg-select-sm {
+        background: var(--mg-bg-panel);
+        border: 1px solid var(--mg-border);
+        color: var(--mg-text);
+        border-radius: 5px;
+        padding: 5px 6px;
+        font-size: 0.78rem;
+    }
+
+    .mg-calc-source {
+        font-size: 0.7rem;
+        color: var(--mg-text-dim);
+        margin: 0;
+        font-style: italic;
+    }
+
+    .mg-calc-stats-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+    }
+
+    .mg-calc-mon-stats {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        background: var(--mg-bg-panel);
+        border-radius: 6px;
+        padding: 8px 10px;
+    }
+
+    .mg-calc-mon-label { font-size: 0.78rem; font-weight: 600; }
+
+    .mg-calc-stat-row {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex-wrap: wrap;
+        font-size: 0.72rem;
+        color: var(--mg-text-dim);
+    }
+
+    .mg-calc-result {
+        background: var(--mg-bg-panel);
+        border: 1px solid var(--mg-border);
+        border-radius: 6px;
+        padding: 10px 12px;
+        font-size: 0.85rem;
+        text-align: center;
+        font-weight: 600;
+    }
+
+    .mg-notes-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+    }
+
+    .mg-notes-col {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        background: var(--mg-bg-raised);
+        border: 1px solid var(--mg-border);
+        border-radius: 8px;
+        padding: 12px;
+    }
+
+    .mg-notes-col-header {
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: var(--mg-accent);
+        text-align: center;
+        padding-bottom: 6px;
+        border-bottom: 1px solid var(--mg-border);
+    }
+
+    .mg-note {
+        background: var(--mg-bg-panel);
+        border: 1px solid var(--mg-border);
+        color: var(--mg-text);
+        border-radius: 6px;
+        padding: 8px;
+        font-size: 0.8rem;
+        min-height: 60px;
+        resize: vertical;
+        font-family: inherit;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .mg-modal-footer {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 12px;
+        padding-top: 4px;
+    }
+
+    .mg-save-status {
+        font-size: 0.75rem;
+        color: var(--mg-text-dim);
+    }
+
+    /* Responsive */
+    @media (max-width: 640px) {
+        .mg-header { flex-direction: column; align-items: flex-start; }
+        .mg-controls { justify-content: flex-start; width: 100%; }
+        .mg-modal-header { gap: 12px; padding: 22px 16px 16px; }
+        .mg-modal-body { padding: 16px; }
+        .mg-notes-grid { grid-template-columns: 1fr; }
+    }
+
+    /* Reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+        .mg-cell, .mg-btn { transition: none; }
+    }
+
+</style>
+
+<script>
+
+    // =========================================================
+    // STATE
+    // =========================================================
+
+    let roster        = [];   // full processed pokemon list (base objects only)
+    let gridRows       = [];  // current row list (filtered/team view)
+    let gridCols       = [];  // current col list
+    let activeCell     = null; // { rowName, colName }
+    let autosaveTimer  = null;
+
+    const STORAGE_PREFIX = 'pkmnMatchup:';
+    const USAGE_ORDER = { 'Meta': 0, 'Viable': 1, 'Niche': 2, 'Unused': 3 };
+
+    document.addEventListener('DOMContentLoaded', loadRoster);
+
+    async function loadRoster() {
+        try {
+            const url = "{% static 'json/pokedata.json' %}";
+            const response = await fetch(url);
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            const data = await response.json();
+
+            roster = Object.entries(data)
+                .map(([key, obj]) => ({
+                    name:            obj.name || key,
+                    filename:        obj.filename || 'default',
+                    isBase:          parseInt(obj.isindependent) === 1,
+                    singlesusage:    obj.SinglesUsage      || 'Unused',
+                    doublesusage:    obj.DoublesUsage      || 'Unused',
+                    champusage:      obj.ChampUsage        || 'Unused',
+                    oversedsvusage:  obj.OverusedSVUsage   || 'Unused',
+                    types:           [obj.type1, obj.type2].filter(Boolean),
+                    baseHP:          parseInt(obj.baseHP)  || 0,
+                    baseAtk:         parseInt(obj.baseAtk) || 0,
+                    baseDef:         parseInt(obj.baseDef) || 0,
+                    baseSpA:         parseInt(obj.baseSpA) || 0,
+                    baseSpD:         parseInt(obj.baseSpD) || 0,
+                    baseSpe:         parseInt(obj.baseSpe) || 0,
+                    learnset:        obj.learnset || {},
+                }))
+                .filter(o => o.isBase);
+
+            document.getElementById('mgLoading').style.display = 'none';
+            document.getElementById('mgGrid').style.display = 'table';
+
+            populateTypeDropdown();
+            await loadMovesData();
+            applyRosterFilter();
+        } catch (err) {
+            document.getElementById('mgLoading').textContent =
+                `Failed to load roster data: ${err.message}`;
+        }
+    }
+
+    // Move data is optional — the calculator works without it (manual entry),
+    // and auto-fills from it automatically if/when it's added to static files.
+    let movesData = null;
+
+    async function loadMovesData() {
+        try {
+            const url = "{% static 'json/moves.json' %}";
+            const response = await fetch(url);
+            if (!response.ok) throw new Error('not found');
+            movesData = await response.json();
+        } catch (err) {
+            movesData = null; // fine — calculator falls back to manual entry
+        }
+    }
+
+    // =========================================================
+    // FILTERING / TEAM ENTRY
+    // =========================================================
+
+    let teamA = [];
+    let teamB = [];
+    let manualAdditions = new Map(); // name (lowercase) -> roster object
+
+    function getUsageField() {
+        return document.getElementById('metagameSelect').value;
+    }
+
+    function usageOf(mon) {
+        return mon[getUsageField()] || 'Unused';
+    }
+
+    function onControlsChanged() {
+        if (teamA.length === 0 && teamB.length === 0) applyRosterFilter();
+    }
+
+    function applyRosterFilter() {
+        const field = getUsageField();
+
+        let filtered = roster.filter(o => {
+            const usage = o[field] || 'Unused';
+            return usage === 'Meta' || usage === 'Viable' || manualAdditions.has(o.name.toLowerCase());
+        });
+
+        filtered.sort((a, b) => {
+            const diff = (USAGE_ORDER[a[field]] ?? 9) - (USAGE_ORDER[b[field]] ?? 9);
+            return diff !== 0 ? diff : a.name.localeCompare(b.name);
+        });
+
+        gridRows = filtered;
+        gridCols = filtered;
+        renderGrid();
+    }
+
+    // ── Manual additions ──────────────────────────────────────────
+
+    function onManualAddKeydown(e) {
+        if (e.key === 'Enter') addManualPokemonFromInput();
+    }
+
+    function addManualPokemonFromInput() {
+        const input = document.getElementById('manualAddInput');
+        const name = input.value.trim();
+        if (!name) return;
+
+        const match = roster.find(o => o.name.toLowerCase() === name.toLowerCase());
+        if (!match) {
+            input.style.borderColor = 'var(--mg-favor-b)';
+            setTimeout(() => { input.style.borderColor = ''; }, 900);
+            return;
+        }
+
+        manualAdditions.set(match.name.toLowerCase(), match);
+        input.value = '';
+        renderManualChips();
+        if (teamA.length === 0 && teamB.length === 0) applyRosterFilter();
+    }
+
+    function removeManualPokemon(nameLower) {
+        manualAdditions.delete(nameLower);
+        renderManualChips();
+        if (teamA.length === 0 && teamB.length === 0) applyRosterFilter();
+    }
+
+    function renderManualChips() {
+        const container = document.getElementById('manualChips');
+        container.innerHTML = '';
+        manualAdditions.forEach((mon, nameLower) => {
+            const chip = document.createElement('span');
+            chip.className = 'mg-chip';
+            chip.innerHTML = `${mon.name} <button onclick="removeManualPokemon('${nameLower}')">✕</button>`;
+            container.appendChild(chip);
+        });
+    }
+
+    function openTeamPanel() {
+        document.getElementById('teamPanel').style.display = 'flex';
+    }
+
+    function closeTeamPanel() {
+        document.getElementById('teamPanel').style.display = 'none';
+    }
+
+    function parseTeamInput(text) {
+        return text
+            .split(/[\n,]+/)
+            .map(s => s.trim())
+            .filter(Boolean);
+    }
+
+    function applyTeams() {
+        const rawA = parseTeamInput(document.getElementById('teamAInput').value);
+        const rawB = parseTeamInput(document.getElementById('teamBInput').value);
+
+        if (rawA.length === 0 && rawB.length === 0) {
+            teamA = [];
+            teamB = [];
+            document.getElementById('clearTeamsBtn').style.display = 'none';
+            applyRosterFilter();
+            closeTeamPanel();
+            return;
+        }
+
+        const byLowerName = new Map(roster.map(o => [o.name.toLowerCase(), o]));
+
+        function resolve(names) {
+            const found = [];
+            const missing = [];
+            names.forEach(n => {
+                const match = byLowerName.get(n.toLowerCase());
+                if (match) found.push(match); else missing.push(n);
+            });
+            return { found, missing };
+        }
+
+        const resultA = resolve(rawA);
+        const resultB = rawB.length > 0 ? resolve(rawB) : { found: resultA.found, missing: [] };
+
+        const field = getUsageField();
+        const sortFn = (a, b) => {
+            const diff = (USAGE_ORDER[a[field]] ?? 9) - (USAGE_ORDER[b[field]] ?? 9);
+            return diff !== 0 ? diff : a.name.localeCompare(b.name);
+        };
+
+        teamA = [...resultA.found].sort(sortFn);
+        teamB = [...resultB.found].sort(sortFn);
+
+        gridRows = teamA;
+        gridCols = teamB;
+
+        const missingAll = [...resultA.missing, ...(rawB.length > 0 ? resultB.missing : [])];
+        const hint = document.getElementById('teamMatchHint');
+        hint.textContent = missingAll.length > 0
+            ? `${missingAll.length} name(s) not recognised: ${missingAll.join(', ')}`
+            : `Matched ${teamA.length} × ${teamB.length} Pokémon.`;
+
+        document.getElementById('clearTeamsBtn').style.display = 'inline-block';
+        renderGrid();
+    }
+
+    function clearTeams() {
+        teamA = [];
+        teamB = [];
+        document.getElementById('teamAInput').value = '';
+        document.getElementById('teamBInput').value = '';
+        document.getElementById('clearTeamsBtn').style.display = 'none';
+        document.getElementById('teamMatchHint').textContent = '';
+        applyRosterFilter();
+    }
+
+    // =========================================================
+    // GRID RENDERING
+    // =========================================================
+
+    function spriteUrl(filename) {
+        return `/static/images/pokemonicons/${filename}.png`;
+    }
+
+    function renderGrid() {
+        const thead = document.getElementById('mgThead');
+        const tbody = document.getElementById('mgTbody');
+        thead.innerHTML = '';
+        tbody.innerHTML = '';
+
+        const totalCells = gridRows.length * gridCols.length;
+        if (totalCells > 40000) {
+            const warn = document.createElement('tr');
+            warn.innerHTML = `<td style="padding:24px; color:var(--mg-text-dim);">
+                Selection too large to render (${gridRows.length} × ${gridCols.length}).
+                Narrow your metagame filter or team list.</td>`;
+            tbody.appendChild(warn);
+            document.getElementById('mgCount').textContent = 'Selection too large';
+            return;
+        }
+
+        const field = getUsageField();
+
+        // Header row
+        const headRow = document.createElement('tr');
+        const corner = document.createElement('th');
+        corner.className = 'mg-corner';
+        headRow.appendChild(corner);
+
+        gridCols.forEach((mon, colIdx) => {
+            const th = document.createElement('th');
+            th.className = 'mg-col-head';
+            if (colIdx > 0 && (gridCols[colIdx - 1][field] || 'Unused') !== (mon[field] || 'Unused')) {
+                th.classList.add('mg-tier-divider-col');
+            }
+            th.innerHTML = `
+                <div class="mg-col-head-inner">
+                    <img src="${spriteUrl(mon.filename)}" alt="${mon.name}"
+                         onerror="this.src='/static/images/icons/default.png'; this.onerror=null;">
+                    <span class="mg-col-head-label">${mon.name}</span>
+                </div>`;
+            headRow.appendChild(th);
+        });
+        thead.appendChild(headRow);
+
+        // Body rows
+        gridRows.forEach((rowMon, rowIdx) => {
+            const tr = document.createElement('tr');
+            if (rowIdx > 0 && (gridRows[rowIdx - 1][field] || 'Unused') !== (rowMon[field] || 'Unused')) {
+                tr.classList.add('mg-tier-divider-row');
+            }
+
+            const rowHead = document.createElement('th');
+            rowHead.className = 'mg-row-head';
+            rowHead.innerHTML = `
+                <img src="${spriteUrl(rowMon.filename)}" alt="${rowMon.name}"
+                     onerror="this.src='/static/images/icons/default.png'; this.onerror=null;">
+                <span class="mg-row-head-label">${rowMon.name}</span>`;
+            tr.appendChild(rowHead);
+
+            gridCols.forEach((colMon, colIdx) => {
+                const td = document.createElement('td');
+                td.className = 'mg-cell';
+                if (colIdx > 0 && (gridCols[colIdx - 1][field] || 'Unused') !== (colMon[field] || 'Unused')) {
+                    td.classList.add('mg-tier-divider-col');
+                }
+
+            if (rowMon.name === colMon.name) {
+                td.classList.add('mg-cell-diagonal');
+                const record = getMatchupRecord(rowMon.name, colMon.name);
+                addNotesDotIfPresent(td, record);
+                td.addEventListener('click', () => openMatchupModal(rowMon, colMon));
+            } else {
+                const record = getMatchupRecord(rowMon.name, colMon.name);
+                styleCell(td, rowMon, colMon, record);
+                td.addEventListener('click', () => openMatchupModal(rowMon, colMon));
+            }
+
+                tr.appendChild(td);
+            });
+
+            tbody.appendChild(tr);
+        });
+
+        document.getElementById('mgCount').textContent =
+            `${gridRows.length} × ${gridCols.length} matchups`;
+    }
+
+    function styleCell(td, rowMon, colMon, record) {
+        if (!record) {
+            td.style.background = 'var(--mg-bg-raised)';
+            return;
+        }
+
+        // record.favor is stored relative to alphabetically-first name.
+        // Convert to "row favoured" orientation for display.
+        const [lowName] = [rowMon.name, colMon.name].sort();
+        const favorForRow = (rowMon.name === lowName) ? record.favor : -record.favor;
+
+        // Diverging colour scale: -100 (col favoured, red) .. 0 (even, grey) .. 100 (row favoured, blue)
+        const t = (favorForRow + 100) / 200; // 0..1
+        const color = mixColor('#d9614a', '#4a4f5f', '#4a90d9', t);
+        td.style.background = color;
+
+        const notesLow  = record.notes?.low  || {};
+        const notesHigh = record.notes?.high || {};
+        const hasNotes = [notesLow.gameplan, notesLow.tech, notesLow.notes,
+                           notesHigh.gameplan, notesHigh.tech, notesHigh.notes]
+                          .some(v => v && v.trim());
+        if (hasNotes) {
+            const dot = document.createElement('span');
+            dot.className = 'mg-cell-dot';
+            td.appendChild(dot);
+        }
+    }
+
+    function mixColor(hexA, hexMid, hexB, t) {
+        // t: 0 -> hexA, 0.5 -> hexMid, 1 -> hexB
+        function hexToRgb(h) {
+            const n = parseInt(h.slice(1), 16);
+            return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+        }
+        function lerp(a, b, f) { return Math.round(a + (b - a) * f); }
+
+        const a = hexToRgb(hexA), m = hexToRgb(hexMid), b = hexToRgb(hexB);
+        let from, to, localT;
+        if (t < 0.5) { from = a; to = m; localT = t / 0.5; }
+        else         { from = m; to = b; localT = (t - 0.5) / 0.5; }
+
+        const rgb = [0, 1, 2].map(i => lerp(from[i], to[i], localT));
+        return `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`;
+    }
+
+    // =========================================================
+    // STORAGE
+    // =========================================================
+
+    function matchupKey(nameA, nameB) {
+        const [low, high] = [nameA, nameB].sort();
+        return `${STORAGE_PREFIX}${low}|${high}`;
+    }
+
+    function getMatchupRecord(nameA, nameB) {
+        try {
+            const raw = localStorage.getItem(matchupKey(nameA, nameB));
+            return raw ? JSON.parse(raw) : null;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    function setMatchupRecord(nameA, nameB, record) {
+        try {
+            localStorage.setItem(matchupKey(nameA, nameB), JSON.stringify(record));
+            return true;
+        } catch (e) {
+            console.warn('Failed to save matchup:', e);
+            return false;
+        }
+    }
+
+    // =========================================================
+    // MODAL
+    // =========================================================
+
+    function openMatchupModal(rowMon, colMon) {
+        activeCell = { rowName: rowMon.name, colName: colMon.name };
+
+        document.getElementById('modalImgA').src = spriteUrl(rowMon.filename);
+        document.getElementById('modalImgA').onerror = function() { this.src = '/static/images/icons/default.png'; this.onerror = null; };
+        document.getElementById('modalNameA').textContent = rowMon.name;
+        document.getElementById('modalImgB').src = spriteUrl(colMon.filename);
+        document.getElementById('modalImgB').onerror = function() { this.src = '/static/images/icons/default.png'; this.onerror = null; };
+        document.getElementById('modalNameB').textContent = colMon.name;
+
+        document.getElementById('sliderLabelA').textContent = `◀ ${rowMon.name}`;
+        document.getElementById('sliderLabelB').textContent = `${colMon.name} ▶`;
+
+        populateSpeedComparison(rowMon, colMon);
+
+        const record = getMatchupRecord(rowMon.name, colMon.name);
+        const [lowName] = [rowMon.name, colMon.name].sort();
+        const favorForRow = record
+            ? (rowMon.name === lowName ? record.favor : -record.favor)
+            : 0;
+
+        document.getElementById('favorSlider').value = favorForRow;
+        updateSliderReadout(favorForRow, rowMon.name, colMon.name);
+
+        // Notes are stored canonically under 'low'/'high' (alphabetical), same
+        // convention as favor, so they stay attached to the right Pokémon
+        // regardless of which axis it's clicked from.
+        const isRowLow = rowMon.name === lowName;
+        const notesForRow  = record?.notes ? (isRowLow ? record.notes.low  : record.notes.high) : null;
+        const notesForCol  = record?.notes ? (isRowLow ? record.notes.high : record.notes.low)  : null;
+
+        document.getElementById('notesHeaderA').textContent = rowMon.name;
+        document.getElementById('notesHeaderB').textContent = colMon.name;
+
+        document.getElementById('noteA_gameplan').value = notesForRow?.gameplan || '';
+        document.getElementById('noteA_tech').value     = notesForRow?.tech     || '';
+        document.getElementById('noteA_notes').value     = notesForRow?.notes   || '';
+
+        document.getElementById('noteB_gameplan').value = notesForCol?.gameplan || '';
+        document.getElementById('noteB_tech').value     = notesForCol?.tech     || '';
+        document.getElementById('noteB_notes').value     = notesForCol?.notes   || '';
+
+        document.getElementById('saveStatus').textContent = record
+            ? `Last saved ${new Date(record.updated).toLocaleString()}`
+            : 'Not yet analysed';
+
+        // Set up the native damage calculator for this matchup
+        calcDirection = 'AtoB'; // A (row) attacks B (col) by default
+        setupCalculator(rowMon, colMon);
+
+        const modal = document.getElementById('matchupModal');
+        modal.style.display = 'flex';
+
+        function outsideClick(e) {
+            if (e.target === modal) closeMatchupModal();
+        }
+        modal.addEventListener('click', outsideClick, { once: true });
+    }
+
+    function closeMatchupModal() {
+        document.getElementById('matchupModal').style.display = 'none';
+        activeCell = null;
+    }
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && document.getElementById('matchupModal').style.display === 'flex') {
+            closeMatchupModal();
+        }
+    });
+
+    function onSliderInput() {
+        if (!activeCell) return;
+        const val = parseInt(document.getElementById('favorSlider').value);
+        updateSliderReadout(val, activeCell.rowName, activeCell.colName);
+        scheduleAutosave();
+    }
+
+    function updateSliderReadout(favorForRow, rowName, colName) {
+        const el = document.getElementById('sliderReadout');
+        if (Math.abs(favorForRow) < 5) {
+            el.textContent = 'Even';
+        } else if (favorForRow > 0) {
+            el.textContent = `${rowName} favoured (+${favorForRow})`;
+        } else {
+            el.textContent = `${colName} favoured (${Math.abs(favorForRow)})`;
+        }
+    }
+
+    function scheduleAutosave() {
+        document.getElementById('saveStatus').textContent = 'Unsaved changes…';
+        clearTimeout(autosaveTimer);
+        autosaveTimer = setTimeout(saveMatchup, 1200);
+    }
+
+    function saveMatchup() {
+        if (!activeCell) return;
+        const { rowName, colName } = activeCell;
+
+        const favorForRow = parseInt(document.getElementById('favorSlider').value);
+        const [lowName] = [rowName, colName].sort();
+        const isRowLow = rowName === lowName;
+        const favorCanonical = isRowLow ? favorForRow : -favorForRow;
+
+        const notesA = {
+            gameplan: document.getElementById('noteA_gameplan').value,
+            tech:     document.getElementById('noteA_tech').value,
+            notes:    document.getElementById('noteA_notes').value,
+        };
+        const notesB = {
+            gameplan: document.getElementById('noteB_gameplan').value,
+            tech:     document.getElementById('noteB_tech').value,
+            notes:    document.getElementById('noteB_notes').value,
+        };
+
+        const record = {
+            favor: favorCanonical,
+            notes: {
+                low:  isRowLow ? notesA : notesB,
+                high: isRowLow ? notesB : notesA,
+            },
+            updated: Date.now(),
+        };
+
+        const ok = setMatchupRecord(rowName, colName, record);
+        document.getElementById('saveStatus').textContent = ok
+            ? `Saved ${new Date(record.updated).toLocaleTimeString()}`
+            : 'Save failed — storage may be full';
+
+        renderGrid(); // refresh cell colour/dot
+    }
+
+    // =========================================================
+    // NATIVE DAMAGE CALCULATOR
+    // =========================================================
+
+    const CALC_TYPES = [
+        'Normal','Fire','Water','Electric','Grass','Ice','Fighting','Poison',
+        'Ground','Flying','Psychic','Bug','Rock','Ghost','Dragon','Dark','Steel','Fairy',
+    ];
+
+    // Standard type effectiveness chart: TYPE_CHART[attackingType][defendingType] = multiplier.
+    // Any pair not listed defaults to 1 (neutral).
+    const TYPE_CHART = {
+        Normal:   { Rock: 0.5, Ghost: 0, Steel: 0.5 },
+        Fire:     { Fire: 0.5, Water: 0.5, Grass: 2, Ice: 2, Bug: 2, Rock: 0.5, Dragon: 0.5, Steel: 2 },
+        Water:    { Fire: 2, Water: 0.5, Grass: 0.5, Ground: 2, Rock: 2, Dragon: 0.5 },
+        Electric: { Water: 2, Electric: 0.5, Grass: 0.5, Ground: 0, Flying: 2, Dragon: 0.5 },
+        Grass:    { Fire: 0.5, Water: 2, Grass: 0.5, Poison: 0.5, Ground: 2, Flying: 0.5, Bug: 0.5, Rock: 2, Dragon: 0.5, Steel: 0.5 },
+        Ice:      { Fire: 0.5, Water: 0.5, Grass: 2, Ice: 0.5, Ground: 2, Flying: 2, Dragon: 2, Steel: 0.5 },
+        Fighting: { Normal: 2, Ice: 2, Poison: 0.5, Flying: 0.5, Psychic: 0.5, Bug: 0.5, Rock: 2, Ghost: 0, Dark: 2, Steel: 2, Fairy: 0.5 },
+        Poison:   { Grass: 2, Poison: 0.5, Ground: 0.5, Rock: 0.5, Ghost: 0.5, Steel: 0, Fairy: 2 },
+        Ground:   { Fire: 2, Electric: 2, Grass: 0.5, Poison: 2, Flying: 0, Bug: 0.5, Rock: 2, Steel: 2 },
+        Flying:   { Electric: 0.5, Grass: 2, Fighting: 2, Bug: 2, Rock: 0.5, Steel: 0.5 },
+        Psychic:  { Fighting: 2, Poison: 2, Psychic: 0.5, Dark: 0, Steel: 0.5 },
+        Bug:      { Fire: 0.5, Grass: 2, Fighting: 0.5, Poison: 0.5, Flying: 0.5, Psychic: 2, Ghost: 0.5, Dark: 2, Steel: 0.5, Fairy: 0.5 },
+        Rock:     { Fire: 2, Ice: 2, Fighting: 0.5, Ground: 0.5, Flying: 2, Bug: 2, Steel: 0.5 },
+        Ghost:    { Normal: 0, Psychic: 2, Ghost: 2, Dark: 0.5 },
+        Dragon:   { Dragon: 2, Steel: 0.5, Fairy: 0 },
+        Dark:     { Fighting: 0.5, Psychic: 2, Ghost: 2, Dark: 0.5, Fairy: 0.5 },
+        Steel:    { Fire: 0.5, Water: 0.5, Electric: 0.5, Ice: 2, Rock: 2, Steel: 0.5, Fairy: 2 },
+        Fairy:    { Fire: 0.5, Fighting: 2, Poison: 0.5, Dragon: 2, Dark: 2, Steel: 0.5 },
+    };
+
+    function typeEffectiveness(moveType, defenderTypes) {
+        let mult = 1;
+        defenderTypes.forEach(dt => {
+            const chart = TYPE_CHART[moveType];
+            if (chart && chart[dt] !== undefined) mult *= chart[dt];
+        });
+        return mult;
+    }
+
+    function populateTypeDropdown() {
+        const select = document.getElementById('calcType');
+        select.innerHTML = CALC_TYPES.map(t => `<option value="${t}">${t}</option>`).join('');
+    }
+
+    let calcDirection = 'AtoB'; // 'AtoB' = row attacks col, 'BtoA' = col attacks row
+    let calcRowMon = null;
+    let calcColMon = null;
+
+    function swapCalcDirection() {
+        calcDirection = (calcDirection === 'AtoB') ? 'BtoA' : 'AtoB';
+        setupCalculator(calcRowMon, calcColMon, true);
+    }
+
+    function getAttackerDefender() {
+        return calcDirection === 'AtoB'
+            ? { attacker: calcRowMon, defender: calcColMon }
+            : { attacker: calcColMon, defender: calcRowMon };
+    }
+
+    function setupCalculator(rowMon, colMon, preserveMoveSelection) {
+        calcRowMon = rowMon;
+        calcColMon = colMon;
+
+        const { attacker, defender } = getAttackerDefender();
+
+        document.getElementById('calcSummary').textContent =
+            `${attacker.name} attacks ${defender.name}`;
+        document.getElementById('calcAtkName').textContent = `${attacker.name} (attacker)`;
+        document.getElementById('calcDefName').textContent = `${defender.name} (defender)`;
+
+        // Populate move dropdown from the attacker's learnset.
+        // Value = learnset key (matches movesData keys); label = real move name if known.
+        const moveSelect = document.getElementById('calcMoveSelect');
+        const previousValue = preserveMoveSelection ? moveSelect.value : '';
+        const moveKeys = Object.keys(attacker.learnset || {}).sort();
+
+        moveSelect.innerHTML = '<option value="">— choose a move —</option>' +
+            moveKeys.map(key => {
+                const label = (movesData && movesData[key] && movesData[key].name) || key;
+                return `<option value="${key}">${label}</option>`;
+            }).join('');
+
+        if (previousValue && moveKeys.includes(previousValue)) {
+            moveSelect.value = previousValue;
+            onMoveSelected();
+        } else {
+            document.getElementById('calcResult').textContent = 'Choose a move to calculate.';
+            document.getElementById('calcSource').textContent = '';
+        }
+    }
+
+    function onMoveSelected() {
+        const moveKey = document.getElementById('calcMoveSelect').value;
+        const sourceEl = document.getElementById('calcSource');
+
+        if (!moveKey) {
+            sourceEl.textContent = '';
+            return;
+        }
+
+        // Try to auto-fill from moves.json if it's available
+        const moveData = movesData ? movesData[moveKey] : null;
+
+        if (moveData) {
+            document.getElementById('calcPower').value = moveData.basePower ?? 0;
+            document.getElementById('calcType').value  = moveData.type || 'Normal';
+
+            if (moveData.category === 'Special') {
+                document.getElementById('calcCategory').value = 'Special';
+            } else {
+                // Physical and Status both default the selector to Physical —
+                // Status moves have basePower 0, which short-circuits the calc below.
+                document.getElementById('calcCategory').value = 'Physical';
+            }
+
+            sourceEl.textContent = moveData.category === 'Status'
+                ? `${moveData.name} — status move, no direct damage`
+                : `${moveData.name} — loaded from moves.json`;
+        } else {
+            sourceEl.textContent = movesData
+                ? 'Not found in moves.json — enter power/type/category manually.'
+                : 'moves.json not found — enter power/type/category manually.';
+        }
+
+        runCalc();
+    }
+
+    function statFromBase(base, ev, level, nature) {
+        const iv = 31;
+        const raw = Math.floor((2 * base + iv + Math.floor(ev / 4)) * level / 100) + 5;
+        return Math.floor(raw * nature);
+    }
+
+    // General non-HP stat calc allowing any IV/EV/nature — used for speed ranges.
+    function calcStatGeneral(base, level, iv, ev, nature) {
+        const raw = Math.floor((2 * base + iv + Math.floor(ev / 4)) * level / 100) + 5;
+        return Math.floor(raw * nature);
+    }
+
+    function speedRangeAtLevel50(base) {
+        const min = calcStatGeneral(base, 50, 0,  0,   0.9); // 0 IV, 0 EV, hindering nature
+        const max = calcStatGeneral(base, 50, 31, 252, 1.1); // 31 IV, 252 EV, boosting nature
+        return { min, max };
+    }
+
+    function populateSpeedComparison(rowMon, colMon) {
+        const rangeA = speedRangeAtLevel50(rowMon.baseSpe);
+        const rangeB = speedRangeAtLevel50(colMon.baseSpe);
+
+        document.getElementById('speedNameA').textContent  = rowMon.name;
+        document.getElementById('speedBaseA').textContent  = rowMon.baseSpe;
+        document.getElementById('speedRangeA').textContent = `${rangeA.min}–${rangeA.max}`;
+
+        document.getElementById('speedNameB').textContent  = colMon.name;
+        document.getElementById('speedBaseB').textContent  = colMon.baseSpe;
+        document.getElementById('speedRangeB').textContent = `${rangeB.min}–${rangeB.max}`;
+
+        const verdictEl = document.getElementById('speedVerdict');
+        if (rowMon.baseSpe === colMon.baseSpe) {
+            verdictEl.textContent = 'Equal base Speed — comes down to EVs, nature, and IVs.';
+        } else if (rangeA.min > rangeB.max) {
+            verdictEl.textContent = `${rowMon.name} always outspeeds ${colMon.name} at these ranges.`;
+        } else if (rangeB.min > rangeA.max) {
+            verdictEl.textContent = `${colMon.name} always outspeeds ${rowMon.name} at these ranges.`;
+        } else {
+            const faster = rowMon.baseSpe > colMon.baseSpe ? rowMon.name : colMon.name;
+            verdictEl.textContent = `${faster} is faster on base stat, but ranges overlap depending on investment.`;
+        }
+    }
+
+    function hpFromBase(base, level) {
+        // Assume max useful HP investment (252 EV, 31 IV) for defender bulk unless overridden later
+        const iv = 31, ev = 252;
+        return Math.floor((2 * base + iv + Math.floor(ev / 4)) * level / 100) + level + 10;
+    }
+
+    function runCalc() {
+        if (!calcRowMon || !calcColMon) return;
+        const moveName = document.getElementById('calcMoveSelect').value;
+        if (!moveName) return;
+
+        const { attacker, defender } = getAttackerDefender();
+
+        const level    = parseInt(document.getElementById('calcLevel').value) || 100;
+        const power    = parseInt(document.getElementById('calcPower').value) || 0;
+        const moveType = document.getElementById('calcType').value;
+        const category = document.getElementById('calcCategory').value;
+        const isCrit   = document.getElementById('calcCrit').checked;
+
+        const atkEV     = parseInt(document.getElementById('calcAtkEV').value) || 0;
+        const atkNature = parseFloat(document.getElementById('calcAtkNature').value);
+        const defEV      = parseInt(document.getElementById('calcDefEV').value) || 0;
+        const defNature  = parseFloat(document.getElementById('calcDefNature').value);
+
+        if (power <= 0) {
+            document.getElementById('calcResult').textContent = 'Status move — no direct damage.';
+            return;
+        }
+
+        const atkBase = category === 'Physical' ? attacker.baseAtk : attacker.baseSpA;
+        const defBase = category === 'Physical' ? defender.baseDef : defender.baseSpD;
+
+        const atkStat = statFromBase(atkBase, atkEV, level, atkNature);
+        const defStat = statFromBase(defBase, defEV, level, defNature);
+        const defHP    = hpFromBase(defender.baseHP, level);
+
+        const stab   = attacker.types.includes(moveType) ? 1.5 : 1;
+        const typeEff = typeEffectiveness(moveType, defender.types);
+        const critMult = isCrit ? 1.5 : 1;
+
+        if (typeEff === 0) {
+            document.getElementById('calcResult').textContent =
+                `${moveType} has no effect on ${defender.name}.`;
+            return;
+        }
+
+        const baseDamage = Math.floor(
+            Math.floor((2 * level / 5 + 2) * power * atkStat / defStat) / 50
+        ) + 2;
+
+        const modifier = stab * typeEff * critMult;
+
+        const minDamage = Math.floor(baseDamage * 0.85 * modifier);
+        const maxDamage = Math.floor(baseDamage * 1.00 * modifier);
+
+        const minPct = ((minDamage / defHP) * 100).toFixed(1);
+        const maxPct = ((maxDamage / defHP) * 100).toFixed(1);
+
+        const hitsMin = Math.ceil(defHP / maxDamage); // best case for attacker
+        const hitsMax = Math.ceil(defHP / minDamage); // worst case for attacker
+        const hkoLabel = hitsMin === hitsMax
+            ? `${hitsMin}HKO`
+            : `${hitsMin}-${hitsMax}HKO`;
+
+        const effLabel = typeEff > 1 ? ' (super effective)' : typeEff < 1 ? ' (not very effective)' : '';
+
+        document.getElementById('calcResult').textContent =
+            `${minDamage}–${maxDamage} (${minPct}–${maxPct}%) — ${hkoLabel}${effLabel}`;
+    }
+
+    
+
+    // =========================================================
+    // EXPORT / IMPORT
+    // =========================================================
+
+    function downloadData() {
+        const entries = {};
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key.startsWith(STORAGE_PREFIX)) {
+                entries[key] = JSON.parse(localStorage.getItem(key));
+            }
+        }
+
+        const blob = new Blob([JSON.stringify(entries, null, 2)], { type: 'application/json' });
+        const url  = URL.createObjectURL(blob);
+        const a    = document.createElement('a');
+        a.href     = url;
+        a.download = `matchup-grid-${new Date().toISOString().slice(0,10)}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+
+    function restoreData(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const parsed = JSON.parse(e.target.result);
+                let count = 0;
+                Object.entries(parsed).forEach(([key, value]) => {
+                    if (key.startsWith(STORAGE_PREFIX)) {
+                        localStorage.setItem(key, JSON.stringify(value));
+                        count++;
+                    }
+                });
+                renderGrid();
+                alert(`Imported ${count} matchup record(s).`);
+            } catch (err) {
+                alert(`Failed to import file: ${err.message}`);
+            }
+            event.target.value = '';
+        };
+        reader.readAsText(file);
+    }
+
+</script>
+{% endblock %}
