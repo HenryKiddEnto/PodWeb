@@ -32,6 +32,7 @@
 
             <span class="mg-count" id="mgCount"></span>
             <button class="mg-btn mg-btn-ghost" id="dataSourceToggle" onclick="toggleDataSource()">🌐 View: Local</button>
+            <button class="mg-btn mg-btn-ghost" onclick="copyGlobalToLocal()">📥 Sync</button>
             <button class="mg-btn mg-btn-ghost" onclick="downloadData()">⬇ Export</button>
             <label class="mg-btn mg-btn-ghost mg-file-label">
                 ⬆ Import
@@ -1671,7 +1672,7 @@
         });
 
         document.getElementById('mgCount').textContent =
-            `${gridRows.length} × ${gridCols.length} matchups`;
+            `${gridRows.length} × ${gridCols.length}`;
     }
 
     function styleCell(td, rowMon, colMon, record) {
@@ -2458,6 +2459,33 @@
         }
 
         renderGrid(); // re-render so cell colours reflect the new source
+    }
+
+    async function copyGlobalToLocal() {
+        const statusEl = document.getElementById('saveStatus');
+
+        // Always fetch a fresh copy rather than trusting whatever's cached in
+        // memory — the user may not have toggled to Global view yet this session.
+        await loadGlobalData();
+
+        let copiedCount = 0;
+        let skippedCount = 0;
+
+        Object.entries(globalData).forEach(([key, value]) => {
+            const alreadyExists = localStorage.getItem(key) !== null;
+            if (alreadyExists) {
+                skippedCount++;
+            } else {
+                localStorage.setItem(key, JSON.stringify(value));
+                copiedCount++;
+            }
+        });
+
+        statusEl.textContent = `Copied ${copiedCount} new entr${copiedCount === 1 ? 'y' : 'ies'}, skipped ${skippedCount} already filled in locally.`;
+
+        if (viewMode === 'local') {
+            renderGrid(); // reflect newly-copied entries immediately if we're looking at local data
+        }
     }
 
 </script>
